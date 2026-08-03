@@ -64,7 +64,7 @@ def set_today():
     schedule_id = request.json.get('schedule_id')
     db.set_todays_schedule(school_id, schedule_id)
     return jsonify({"success": True})
-    
+
 @app.route('/api/admin/schedule_periods', methods=['POST'])
 def save_periods():
     school_id = session.get('admin_school_id')
@@ -80,6 +80,20 @@ def save_periods():
         
     db.update_schedule_periods(schedule_id, periods)
     return jsonify({"success": True})
+    
+@app.route('/api/admin/schedule_periods/<int:schedule_id>', methods=['GET'])
+def get_periods(schedule_id):
+    school_id = session.get('admin_school_id')
+    if not school_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Optional safety: confirm schedule belongs to logged-in school
+    # (recommended)
+    # if not db.schedule_belongs_to_school(schedule_id, school_id):
+    #     return jsonify({"error": "Forbidden"}), 403
+
+    return jsonify(db.get_schedule_periods(schedule_id))
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

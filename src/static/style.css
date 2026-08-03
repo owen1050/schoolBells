@@ -1,107 +1,148 @@
-/* Reset and base styles */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+:root{
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --accent-2: #22c55e;
+  --shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+  --radius: 14px;
+  --radius-sm: 10px;
 }
 
-body {
-  background-color: #f4f4f4;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  padding: 40px;
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 20% 0%, #eef2ff 0%, transparent 55%),
+              radial-gradient(1000px 500px at 80% 0%, #ecfeff 0%, transparent 55%),
+              var(--bg);
 }
 
-.container {
+.container{
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+h1,h2,h3{
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+p{ color: var(--muted); line-height: 1.5; }
+
+select, input, textarea{
   width: 100%;
-  max-width: 1200px;
-  background-color: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-#timer {
-  font-size: 256px;
-  font-weight: bold;
-  text-align: center;
-  color: #333; /* default gray */
-  transition: color 0.3s ease;
-}
-
-#eventDisplay {
-  font-size: 120px;
-  font-weight: bold;
-  text-align: center;
-  color: #333; /* default gray */
-  margin-bottom: 90px;
-  transition: color 0.3s ease;
-}
-
-@media(max-width: 768px) {
-    #timer  {
-        font-size: 55px;
-    }
-}
-
-#timer.warning {
-  color: #e53935; /* red */
-}
-
-.input-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.input-row label {
-  width: 80px;
-  font-weight: 500;
-  color: #333;
-}
-
-.input-row input[type="text"] {
-  flex: 1;
-  padding: 10px 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  transition: border-color 0.2s ease;
-}
-
-.input-row input[type="text"]:focus {
-  border-color: #007bff;
+  padding: 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
   outline: none;
 }
 
-.button-group {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
+select:focus, input:focus, textarea:focus{
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-.button-group button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #333;
-  color: white;
-  border: none;
-  border-radius: 6px;
+button{
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.button-group button:hover {
-  background-color: #111;
+button.secondary{
+  background: #fff;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+button.success{ background: var(--accent-2); }
+
+table{
+  width:100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+th,td{
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+th{
+  color: var(--muted);
+  font-weight: 700;
+  background: #f9fafb;
+}
+
+tr:last-child td{ border-bottom: none; }
+
+.badge{
+  display:inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.countdown{
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.countdown .label{
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.countdown .time{
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.active-period{
+  background: #eff6ff !important;
+  font-weight: 700;
+}
+html, body { height: 100%; }
+
+body{
+  margin: 0;
+  min-height: 100%;
+  display: flex;
+  justify-content: center;   /* horizontal centering */
+  align-items: flex-start;   /* keep content near top */
+  padding: 48px 16px;        /* breathing room on all screens */
+}
+
+/* A consistent centered column for all pages */
+.container{
+  width: 100%;
+  max-width: 900px;
 }

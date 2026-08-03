@@ -83,3 +83,12 @@ def update_schedule_periods(schedule_id, periods_list):
             c.execute('''INSERT INTO periods (schedule_id, name, start_time, end_time) 
                          VALUES (?, ?, ?, ?)''', (schedule_id, name, start_time, end_time))
         conn.commit()
+
+def get_schedule_periods(schedule_id):
+    with get_connection() as conn:
+        rows = conn.execute(
+            'SELECT name, start_time FROM periods WHERE schedule_id = ? ORDER BY start_time',
+            (schedule_id,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+

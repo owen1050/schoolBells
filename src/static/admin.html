@@ -101,18 +101,44 @@
             });
         }
 
-        function showEditor() {
-            const schedule_id = document.getElementById('scheduleSelect').value;
-            if (schedule_id) {
-                document.getElementById('editorSection').style.display = 'block';
-                // Clear out inputs when switching schedules
-                document.querySelectorAll('.p-name').forEach(el => el.value = '');
-                document.querySelectorAll('.p-time').forEach(el => el.value = '');
-                document.getElementById('pasteArea').value = '';
-            } else {
-                document.getElementById('editorSection').style.display = 'none';
-            }
-        }
+        function clearPeriodInputs() {
+  document.querySelectorAll('.p-name').forEach(el => el.value = '');
+  document.querySelectorAll('.p-time').forEach(el => el.value = '');
+}
+
+function fillPeriodInputs(periods) {
+  clearPeriodInputs();
+  const names = document.querySelectorAll('.p-name');
+  const times = document.querySelectorAll('.p-time');
+
+  periods.slice(0, 30).forEach((p, i) => {
+    names[i].value = p.name || '';
+    times[i].value = p.start_time || '';
+  });
+}
+
+function showEditor() {
+  const schedule_id = document.getElementById('scheduleSelect').value;
+  if (!schedule_id) {
+    document.getElementById('editorSection').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('editorSection').style.display = 'block';
+  document.getElementById('pasteArea').value = '';
+  clearPeriodInputs();
+
+  fetch(`/api/admin/schedule_periods/${schedule_id}`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(periods => fillPeriodInputs(periods))
+    .catch(err => {
+      console.error('Error loading periods:', err);
+      // Leave blanks if it fails
+    });
+}
 
         function setTodaysSchedule() {
             const schedule_id = document.getElementById('scheduleSelect').value;
