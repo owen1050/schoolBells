@@ -80,7 +80,7 @@ def save_periods():
         
     db.update_schedule_periods(schedule_id, periods)
     return jsonify({"success": True})
-    
+
 @app.route('/api/admin/schedule_periods/<int:schedule_id>', methods=['GET'])
 def get_periods(schedule_id):
     school_id = session.get('admin_school_id')
@@ -96,4 +96,4 @@ def get_periods(schedule_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5007)
