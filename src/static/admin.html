@@ -44,7 +44,7 @@
         
         <hr>
         
-        <p><strong>Manual Entry (Up to 20):</strong></p>
+        <p><strong>Manual Entry (Up to 30):</strong></p>
         <div id="periodInputs"></div>
         
         <br>
@@ -54,7 +54,7 @@
     <script>
         // Initialize the 20 empty rows on page load
         const container = document.getElementById('periodInputs');
-        for (let i = 1; i <= 20; i++) {
+        for (let i = 1; i <= 30; i++) {
             container.innerHTML += `
                 <div class="period-row">
                     <span>${i}.</span>
@@ -155,7 +155,7 @@
             let rowIdx = 0;
             // Iterate by 2 since data comes in pairs (Name, Time)
             for (let i = 0; i < parts.length; i += 2) {
-                if (rowIdx >= 20) break; // Max 20 periods
+                if (rowIdx >= 30) break; // Max 20 periods
                 
                 if (parts[i]) names[rowIdx].value = parts[i];
                 if (parts[i+1]) {

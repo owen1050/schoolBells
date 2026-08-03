@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, os, shutil
 from datetime import date
 
 DB_FILE = 'prod.db'
@@ -9,6 +9,9 @@ def get_connection():
     return conn
 
 def init_db():
+    if os.path.exists(DB_FILE):
+        shutil.copy2(DB_FILE, "backup.db")
+
     with get_connection() as conn:
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS schools (id INTEGER PRIMARY KEY, name TEXT, password TEXT)''')

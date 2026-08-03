@@ -46,8 +46,54 @@
     <script>
         let currentPeriods = [];
         let timerInterval = null;
+        let refreshInterval = null;
+        let currentSchoolId = null;
+        let lastScheduleFingerprint = null;
 
-        // Load schools on page load
+        function getSchoolIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const v = params.get('school');
+            if (!v) return null;
+            if (!/^\d+$/.test(v)) return null;
+            return v;
+        }
+
+        function setSchoolIdInUrl(schoolId) {
+            const url = new URL(window.location.href);
+            if (!schoolId) {
+                url.searchParams.delete('school');
+            } else {
+                url.searchParams.set('school', String(schoolId));
+            }
+            window.history.pushState({}, '', url);
+        }
+
+        function fingerprintSchedule(data) {
+            // A stable string to detect changes every 5 minutes
+            return JSON.stringify({
+                schedule_name: data && data.schedule_name,
+                periods: Array.isArray(data && data.periods) ? data.periods : []
+            });
+        }
+
+        function stopRefreshTimer() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        function startRefreshTimer() {
+            stopRefreshTimer();
+            // Check for changes every 5 minutes
+            refreshInterval = setInterval(() => {
+                if (currentSchoolId) {
+                    loadSchedule(currentSchoolId, { updateUrl: false, silent: true });
+                }
+            }, 5 * 60 * 1000);
+        }
+
+        // Load schools on page load, then auto-select from URL if present
         fetch('/api/schools')
             .then(res => res.json())
             .then(schools => {
@@ -58,16 +104,37 @@
                     option.innerText = school.name;
                     select.appendChild(option);
                 });
+
+                const fromUrl = getSchoolIdFromUrl();
+                if (fromUrl) {
+                    select.value = fromUrl;
+                    loadSchedule(fromUrl, { updateUrl: false, silent: false });
+                }
             })
             .catch(err => console.error('Error fetching schools:', err));
 
-        function loadSchedule() {
-            const schoolId = document.getElementById('schoolSelect').value;
+        function loadSchedule(forcedSchoolId, opts) {
+            const options = Object.assign({ updateUrl: true, silent: false }, opts || {});
+            const schoolId = forcedSchoolId || document.getElementById('schoolSelect').value;
+            currentSchoolId = schoolId || null;
+
+            if (options.updateUrl) setSchoolIdInUrl(schoolId);
+
             if (!schoolId) {
                 document.getElementById('scheduleContainer').style.display = 'none';
                 document.getElementById('countdownContainer').style.display = 'none';
                 clearInterval(timerInterval);
+                stopRefreshTimer();
+                lastScheduleFingerprint = null;
                 return;
+            }
+
+            startRefreshTimer();
+
+            if (!options.silent) {
+                document.getElementById('countdownContainer').style.display = 'block';
+                document.getElementById('countdownLabel').innerText = 'Loading schedule...';
+                document.getElementById('countdownTimer').innerText = '--:--:--';
             }
 
             fetch(`/api/schedule/today/${schoolId}`)
@@ -76,6 +143,13 @@
                     return res.json();
                 })
                 .then(data => {
+                    const fp = fingerprintSchedule(data);
+                    if (options.silent && lastScheduleFingerprint && fp === lastScheduleFingerprint) {
+                        // No changes detected
+                        return;
+                    }
+                    lastScheduleFingerprint = fp;
+
                     document.getElementById('scheduleContainer').style.display = 'block';
                     document.getElementById('countdownContainer').style.display = 'block';
                     document.getElementById('scheduleName').innerText = "Today's Schedule: " + data.schedule_name;
@@ -114,6 +188,7 @@
                     clearInterval(timerInterval);
                 });
         }
+
 
         // Helper function to convert "HH:MM" string to a Date object for today
         function parseTime(timeStr) {
