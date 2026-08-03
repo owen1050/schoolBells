@@ -1,0 +1,7 @@
+screen -XS vwabells kill
+git add -A
+git commit -m "update from server"
+git pull
+git push
+source /home/buslerserver/owenworkspace/servers/vwabells/src/vwaBellsEnv/bin/activate
+screen -dmS vwabells waitress-serve --host 127.0.0.1 --port 5007 server:app

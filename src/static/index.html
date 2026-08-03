@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bell Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body onload="initIndex()">
+
+ <div class="container">
+    <div id="timer">00:00</div>
+    <div id="eventDisplay" class="event-display"></div>
+
+    <div class="button-group">
+      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:57&event1=Start of HR&event2=End of HR&time3=08:00&time4=08:42&event3=Start of A&event4=End of A&time5=08:45&time6=09:27&event5=Start of B&event6=End of B&time7=09:30&time8=10:12&event7=Start of C&event8=End of C&time9=10:15&time10=10:57&event9=Start of D&event10=End of D&time11=11:00&time12=11:35&event11=Start of E&event12=End of E&time13=11:38&time14=12:20&event13=Start of F&event14=End of F&time15=12:23&time16=13:05&event15=Start of G&event16=End of G&time17=13:08&time18=13:50&event17=Start of H&event18=End of H&time19=13:53&time20=14:35&event19=Start of I&event20=End of I'">Schedule 1</button>
+      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:57&event1=Start of HR&event2=End of HR&time3=08:00&time4=08:35&event3=Start of A&event4=End of A&time5=08:38&time6=09:13&event5=Start of B&event6=End of B&time7=09:25&time8=10:20&event7=Start of Assembly&event8=End of Assembly&time9=10:25&time10=10:58&event9=Start of C&event10=End of C&time11=11:01&time12=11:34&event11=Start of D&event12=End of D&time13=11:37&time14=12:12&event13=Start of E&event14=End of E&time15=12:15&time16=12:48&event15=Start of F&event16=End of F&time17=12:51&time18=13:24&event17=Start of G&event18=End of G&time19=13:27&time20=14:00&event19=Start of H&event20=End of H&time21=14:03&time22=14:35&event21=Start of I&event22=End of I'">Schedule 2</button>
+      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:54&event1=Start of HR&event2=End of HR&time3=07:57&time4=08:34&event3=Start of A&event4=End of A&time5=08:37&time6=09:14&event5=Start of B&event6=End of B&time7=09:17&time8=09:54&event7=Start of C&event8=End of C&time9=09:57&time10=10:34&event9=Start of D&event10=End of D&time11=10:37&time12=11:17&event11=Start of WIN&event12=End of WIN&time13=11:20&time14=11:55&event13=Start of E&event14=End of E&time15=11:58&time16=12:35&event15=Start of F&event16=End of F&time17=12:38&time18=13:15&event17=Start of G&event18=End of G&time19=13:18&time20=13:55&event19=Start of H&event20=End of H&time21=13:58&time22=14:35&event21=Start of I&event22=End of I'">WIN</button>
+
+      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=10:15&time2=10:20&event1=Start%20of%20HR&event2=End%20of%20HR&time3=10:22&time4=10:48&event3=Start%20of%20A&event4=End%20of%20A&time5=10:50&time6=11:16&event5=Start%20of%20B&event6=End%20of%20B&time7=11:18&time8=11:44&event7=Start%20of%20C&event8=End%20of%20C&time9=11:46&time10=12:12&event9=Start%20of%20D&event10=End%20of%20D&time11=12:14&time12=12:44&event11=Start%20of%20E&event12=End%20of%20E&time13=12:46&time14=13:12&event13=Start%20of%20F&event14=End%20of%20F&time15=13:14&time16=13:40&event15=Start%20of%20G&event16=End%20of%20G&time17=13:42&time18=14:08&event17=Start%20of%20H&event18=End%20of%20H&time19=14:10&time20=14:35&event19=Start%20of%20I&event20=End%20of%20I'">1/27 Delayed Opening</button>
+
+
+    </div>
+    <form class="input-list">
+  <!-- Time + Event Rows -->
+  <div class="input-row">
+    <label for="time1">Time 1:</label><input type="text" id="time1" />
+    <label>Event:</label><input type="text" id="event1" />
+  </div>
+  <div class="input-row">
+    <label for="time2">Time 2:</label><input type="text" id="time2" />
+    <label>Event:</label><input type="text" id="event2" />
+  </div>
+  <div class="input-row">
+    <label for="time3">Time 3:</label><input type="text" id="time3" />
+    <label>Event:</label><input type="text" id="event3" />
+  </div>
+
+  <!-- Repeat the same structure for all 24 rows -->
+  <!-- I am including the full list down to 24: -->
+
+  <div class="input-row"><label for="time4">Time 4:</label><input type="text" id="time4" /><label>Event:</label><input type="text" id="event4" /></div>
+  <div class="input-row"><label for="time5">Time 5:</label><input type="text" id="time5" /><label>Event:</label><input type="text" id="event5" /></div>
+  <div class="input-row"><label for="time6">Time 6:</label><input type="text" id="time6" /><label>Event:</label><input type="text" id="event6" /></div>
+  <div class="input-row"><label for="time7">Time 7:</label><input type="text" id="time7" /><label>Event:</label><input type="text" id="event7" /></div>
+  <div class="input-row"><label for="time8">Time 8:</label><input type="text" id="time8" /><label>Event:</label><input type="text" id="event8" /></div>
+  <div class="input-row"><label for="time9">Time 9:</label><input type="text" id="time9" /><label>Event:</label><input type="text" id="event9" /></div>
+  <div class="input-row"><label for="time10">Time 10:</label><input type="text" id="time10" /><label>Event:</label><input type="text" id="event10" /></div>
+  <div class="input-row"><label for="time11">Time 11:</label><input type="text" id="time11" /><label>Event:</label><input type="text" id="event11" /></div>
+  <div class="input-row"><label for="time12">Time 12:</label><input type="text" id="time12" /><label>Event:</label><input type="text" id="event12" /></div>
+  <div class="input-row"><label for="time13">Time 13:</label><input type="text" id="time13" /><label>Event:</label><input type="text" id="event13" /></div>
+  <div class="input-row"><label for="time14">Time 14:</label><input type="text" id="time14" /><label>Event:</label><input type="text" id="event14" /></div>
+  <div class="input-row"><label for="time15">Time 15:</label><input type="text" id="time15" /><label>Event:</label><input type="text" id="event15" /></div>
+  <div class="input-row"><label for="time16">Time 16:</label><input type="text" id="time16" /><label>Event:</label><input type="text" id="event16" /></div>
+  <div class="input-row"><label for="time17">Time 17:</label><input type="text" id="time17" /><label>Event:</label><input type="text" id="event17" /></div>
+  <div class="input-row"><label for="time18">Time 18:</label><input type="text" id="time18" /><label>Event:</label><input type="text" id="event18" /></div>
+  <div class="input-row"><label for="time19">Time 19:</label><input type="text" id="time19" /><label>Event:</label><input type="text" id="event19" /></div>
+  <div class="input-row"><label for="time20">Time 20:</label><input type="text" id="time20" /><label>Event:</label><input type="text" id="event20" /></div>
+  <div class="input-row"><label for="time21">Time 21:</label><input type="text" id="time21" /><label>Event:</label><input type="text" id="event21" /></div>
+  <div class="input-row"><label for="time22">Time 22:</label><input type="text" id="time22" /><label>Event:</label><input type="text" id="event22" /></div>
+  <div class="input-row"><label for="time23">Time 23:</label><input type="text" id="time23" /><label>Event:</label><input type="text" id="event23" /></div>
+  <div class="input-row"><label for="time24">Time 24:</label><input type="text" id="time24" /><label>Event:</label><input type="text" id="event24" /></div>
+</form>
+
+
+  </div>
+
+  <script src="url.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
