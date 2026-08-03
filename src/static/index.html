@@ -1,71 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bell Timer</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <title>School Bell Schedules</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; text-align: center; }
+        select { padding: 10px; font-size: 16px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        
+        /* Countdown styles */
+        #countdownContainer { margin: 20px 0 60px 0; display: none; }
+        #countdownTimer { font-size: 4em; font-weight: bold; color: #333; margin: 10px 0; }
+        #countdownLabel { font-size: 1.5em; color: #666; }
+        
+        .active-period { background-color: #e6f7ff; font-weight: bold; }
+    </style>
 </head>
-<body onload="initIndex()">
-
- <div class="container">
-    <div id="timer">00:00</div>
-    <div id="eventDisplay" class="event-display"></div>
-
-    <div class="button-group">
-      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:57&event1=Start of HR&event2=End of HR&time3=08:00&time4=08:42&event3=Start of A&event4=End of A&time5=08:45&time6=09:27&event5=Start of B&event6=End of B&time7=09:30&time8=10:12&event7=Start of C&event8=End of C&time9=10:15&time10=10:57&event9=Start of D&event10=End of D&time11=11:00&time12=11:35&event11=Start of E&event12=End of E&time13=11:38&time14=12:20&event13=Start of F&event14=End of F&time15=12:23&time16=13:05&event15=Start of G&event16=End of G&time17=13:08&time18=13:50&event17=Start of H&event18=End of H&time19=13:53&time20=14:35&event19=Start of I&event20=End of I'">Schedule 1</button>
-      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:57&event1=Start of HR&event2=End of HR&time3=08:00&time4=08:35&event3=Start of A&event4=End of A&time5=08:38&time6=09:13&event5=Start of B&event6=End of B&time7=09:25&time8=10:20&event7=Start of Assembly&event8=End of Assembly&time9=10:25&time10=10:58&event9=Start of C&event10=End of C&time11=11:01&time12=11:34&event11=Start of D&event12=End of D&time13=11:37&time14=12:12&event13=Start of E&event14=End of E&time15=12:15&time16=12:48&event15=Start of F&event16=End of F&time17=12:51&time18=13:24&event17=Start of G&event18=End of G&time19=13:27&time20=14:00&event19=Start of H&event20=End of H&time21=14:03&time22=14:35&event21=Start of I&event22=End of I'">Schedule 2</button>
-      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=07:45&time2=07:54&event1=Start of HR&event2=End of HR&time3=07:57&time4=08:34&event3=Start of A&event4=End of A&time5=08:37&time6=09:14&event5=Start of B&event6=End of B&time7=09:17&time8=09:54&event7=Start of C&event8=End of C&time9=09:57&time10=10:34&event9=Start of D&event10=End of D&time11=10:37&time12=11:17&event11=Start of WIN&event12=End of WIN&time13=11:20&time14=11:55&event13=Start of E&event14=End of E&time15=11:58&time16=12:35&event15=Start of F&event16=End of F&time17=12:38&time18=13:15&event17=Start of G&event18=End of G&time19=13:18&time20=13:55&event19=Start of H&event20=End of H&time21=13:58&time22=14:35&event21=Start of I&event22=End of I'">WIN</button>
-
-      <button onclick="window.location.href='https://vwabells.owenbusler.com/?time1=10:15&time2=10:20&event1=Start%20of%20HR&event2=End%20of%20HR&time3=10:22&time4=10:48&event3=Start%20of%20A&event4=End%20of%20A&time5=10:50&time6=11:16&event5=Start%20of%20B&event6=End%20of%20B&time7=11:18&time8=11:44&event7=Start%20of%20C&event8=End%20of%20C&time9=11:46&time10=12:12&event9=Start%20of%20D&event10=End%20of%20D&time11=12:14&time12=12:44&event11=Start%20of%20E&event12=End%20of%20E&time13=12:46&time14=13:12&event13=Start%20of%20F&event14=End%20of%20F&time15=13:14&time16=13:40&event15=Start%20of%20G&event16=End%20of%20G&time17=13:42&time18=14:08&event17=Start%20of%20H&event18=End%20of%20H&time19=14:10&time20=14:35&event19=Start%20of%20I&event20=End%20of%20I'">1/27 Delayed Opening</button>
-
-
+<body>
+    <div id="countdownContainer">
+        <div id="countdownLabel">Waiting for schedule...</div>
+        <div id="countdownTimer">--:--:--</div>
     </div>
-    <form class="input-list">
-  <!-- Time + Event Rows -->
-  <div class="input-row">
-    <label for="time1">Time 1:</label><input type="text" id="time1" />
-    <label>Event:</label><input type="text" id="event1" />
-  </div>
-  <div class="input-row">
-    <label for="time2">Time 2:</label><input type="text" id="time2" />
-    <label>Event:</label><input type="text" id="event2" />
-  </div>
-  <div class="input-row">
-    <label for="time3">Time 3:</label><input type="text" id="time3" />
-    <label>Event:</label><input type="text" id="event3" />
-  </div>
 
-  <!-- Repeat the same structure for all 24 rows -->
-  <!-- I am including the full list down to 24: -->
+    <h1>Select Your School</h1>
+    <select id="schoolSelect" onchange="loadSchedule()">
+        <option value="">-- Choose a School --</option>
+    </select>
 
-  <div class="input-row"><label for="time4">Time 4:</label><input type="text" id="time4" /><label>Event:</label><input type="text" id="event4" /></div>
-  <div class="input-row"><label for="time5">Time 5:</label><input type="text" id="time5" /><label>Event:</label><input type="text" id="event5" /></div>
-  <div class="input-row"><label for="time6">Time 6:</label><input type="text" id="time6" /><label>Event:</label><input type="text" id="event6" /></div>
-  <div class="input-row"><label for="time7">Time 7:</label><input type="text" id="time7" /><label>Event:</label><input type="text" id="event7" /></div>
-  <div class="input-row"><label for="time8">Time 8:</label><input type="text" id="time8" /><label>Event:</label><input type="text" id="event8" /></div>
-  <div class="input-row"><label for="time9">Time 9:</label><input type="text" id="time9" /><label>Event:</label><input type="text" id="event9" /></div>
-  <div class="input-row"><label for="time10">Time 10:</label><input type="text" id="time10" /><label>Event:</label><input type="text" id="event10" /></div>
-  <div class="input-row"><label for="time11">Time 11:</label><input type="text" id="time11" /><label>Event:</label><input type="text" id="event11" /></div>
-  <div class="input-row"><label for="time12">Time 12:</label><input type="text" id="time12" /><label>Event:</label><input type="text" id="event12" /></div>
-  <div class="input-row"><label for="time13">Time 13:</label><input type="text" id="time13" /><label>Event:</label><input type="text" id="event13" /></div>
-  <div class="input-row"><label for="time14">Time 14:</label><input type="text" id="time14" /><label>Event:</label><input type="text" id="event14" /></div>
-  <div class="input-row"><label for="time15">Time 15:</label><input type="text" id="time15" /><label>Event:</label><input type="text" id="event15" /></div>
-  <div class="input-row"><label for="time16">Time 16:</label><input type="text" id="time16" /><label>Event:</label><input type="text" id="event16" /></div>
-  <div class="input-row"><label for="time17">Time 17:</label><input type="text" id="time17" /><label>Event:</label><input type="text" id="event17" /></div>
-  <div class="input-row"><label for="time18">Time 18:</label><input type="text" id="time18" /><label>Event:</label><input type="text" id="event18" /></div>
-  <div class="input-row"><label for="time19">Time 19:</label><input type="text" id="time19" /><label>Event:</label><input type="text" id="event19" /></div>
-  <div class="input-row"><label for="time20">Time 20:</label><input type="text" id="time20" /><label>Event:</label><input type="text" id="event20" /></div>
-  <div class="input-row"><label for="time21">Time 21:</label><input type="text" id="time21" /><label>Event:</label><input type="text" id="event21" /></div>
-  <div class="input-row"><label for="time22">Time 22:</label><input type="text" id="time22" /><label>Event:</label><input type="text" id="event22" /></div>
-  <div class="input-row"><label for="time23">Time 23:</label><input type="text" id="time23" /><label>Event:</label><input type="text" id="event23" /></div>
-  <div class="input-row"><label for="time24">Time 24:</label><input type="text" id="time24" /><label>Event:</label><input type="text" id="event24" /></div>
-</form>
+    <div id="scheduleContainer" style="display:none;">
+        <h2 id="scheduleName"></h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    <th>Start</th>
+                    <th>End</th>
+                </tr>
+            </thead>
+            <tbody id="periodList"></tbody>
+        </table>
+    </div>
 
+    <script>
+        let currentPeriods = [];
+        let timerInterval = null;
 
-  </div>
+        // Load schools on page load
+        fetch('/api/schools')
+            .then(res => res.json())
+            .then(schools => {
+                const select = document.getElementById('schoolSelect');
+                schools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.innerText = school.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('Error fetching schools:', err));
 
-  <script src="url.js"></script>
-  <script src="index.js"></script>
+        function loadSchedule() {
+            const schoolId = document.getElementById('schoolSelect').value;
+            if (!schoolId) {
+                document.getElementById('scheduleContainer').style.display = 'none';
+                document.getElementById('countdownContainer').style.display = 'none';
+                clearInterval(timerInterval);
+                return;
+            }
+
+            fetch(`/api/schedule/today/${schoolId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('scheduleContainer').style.display = 'block';
+                    document.getElementById('countdownContainer').style.display = 'block';
+                    document.getElementById('scheduleName').innerText = "Today's Schedule: " + data.schedule_name;
+                    
+                    const tbody = document.getElementById('periodList');
+                    tbody.innerHTML = '';
+                    
+                    currentPeriods = Array.isArray(data.periods) ? data.periods : [];
+
+                    if (currentPeriods.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3">No periods found for today.</td></tr>';
+                        document.getElementById('countdownLabel').innerText = 'No schedule periods available';
+                        document.getElementById('countdownTimer').innerText = '--:--:--';
+                        clearInterval(timerInterval);
+                        return;
+                    }
+
+                    currentPeriods.forEach((p, index) => {
+                        const end = p.end_time || "";
+                        tbody.innerHTML += `<tr id="row-${index}"><td>${p.name}</td><td>${p.start_time}</td><td>${end}</td></tr>`;
+                    });
+
+                    // Start the countdown logic
+                    if (timerInterval) clearInterval(timerInterval);
+                    updateCountdown();
+                    timerInterval = setInterval(updateCountdown, 1000);
+                })
+                .catch(err => {
+                    console.error('Error fetching schedule:', err);
+                    document.getElementById('scheduleContainer').style.display = 'block';
+                    document.getElementById('countdownContainer').style.display = 'block';
+                    document.getElementById('scheduleName').innerText = "Today's Schedule";
+                    document.getElementById('periodList').innerHTML = '<tr><td colspan="3">Error loading schedule.</td></tr>';
+                    document.getElementById('countdownLabel').innerText = 'Unable to load schedule';
+                    document.getElementById('countdownTimer').innerText = '--:--:--';
+                    clearInterval(timerInterval);
+                });
+        }
+
+        // Helper function to convert "HH:MM" string to a Date object for today
+        function parseTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const now = new Date();
+            now.setHours(hours, minutes, 0, 0);
+            return now;
+        }
+
+        function formatTimeRemaining(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            // Format HH:MM:SS
+            const h = hours > 0 ? String(hours).padStart(2, '0') + ':' : '';
+            const m = String(minutes).padStart(2, '0');
+            const s = String(seconds).padStart(2, '0');
+            return `${h}${m}:${s}`;
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const labelEl = document.getElementById('countdownLabel');
+            const timerEl = document.getElementById('countdownTimer');
+            
+            let currentActiveIndex = -1;
+            let nextEventTime = null;
+            let statusText = "";
+
+            // Clear previous highlighting
+            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('active-period'));
+
+            // Check before the school day starts
+            const firstStart = parseTime(currentPeriods[0].start_time);
+            if (now < firstStart) {
+                statusText = `Time until ${currentPeriods[0].name} starts`;
+                nextEventTime = firstStart;
+            } else {
+                // Iterate to find where we are right now
+                for (let i = 0; i < currentPeriods.length; i++) {
+                    const p = currentPeriods[i];
+                    const start = parseTime(p.start_time);
+                    // Use a fallback end time if it's the last period and undefined
+                    const end = p.end_time ? parseTime(p.end_time) : new Date(start.getTime() + 45*60000); 
+
+                    // We are inside this period
+                    if (now >= start && now < end) {
+                        currentActiveIndex = i;
+                        statusText = `Time remaining in ${p.name}`;
+                        nextEventTime = end;
+                        break;
+                    }
+
+                    // We are in a passing period (between this period's end and the next period's start)
+                    if (i + 1 < currentPeriods.length) {
+                        const nextStart = parseTime(currentPeriods[i+1].start_time);
+                        if (now >= end && now < nextStart) {
+                            statusText = `Passing period until ${currentPeriods[i+1].name}`;
+                            nextEventTime = nextStart;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (nextEventTime) {
+                const diff = nextEventTime - now;
+                timerEl.innerText = formatTimeRemaining(diff);
+                labelEl.innerText = statusText;
+                
+                if (currentActiveIndex !== -1) {
+                    const row = document.getElementById(`row-${currentActiveIndex}`);
+                    if(row) row.classList.add('active-period');
+                }
+            } else {
+                // End of day
+                timerEl.innerText = "00:00";
+                labelEl.innerText = "School Day Over";
+            }
+        }
+    </script>
 </body>
 </html>

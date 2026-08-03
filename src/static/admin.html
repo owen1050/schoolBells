@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; }
+        .section { display: none; margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;}
+        .period-row { margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
+        input[type="text"], input[type="password"], select { padding: 8px; }
+        input[type="time"] { padding: 6px; }
+        button { padding: 8px 12px; cursor: pointer; }
+        textarea { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="loginSection" style="display:block;">
+        <h2>Admin Login</h2>
+        <select id="adminSchoolSelect"></select>
+        <input type="password" id="adminPassword" placeholder="Admin Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="dashboardSection" class="section">
+        <h2>Manage Schedules</h2>
+        
+        <label>Select Existing Schedule:</label>
+        <select id="scheduleSelect" onchange="showEditor()"></select>
+        <button onclick="setTodaysSchedule()">Set as Today's Schedule</button>
+        
+        <hr>
+        
+        <h3>Or Create New Schedule</h3>
+        <input type="text" id="newScheduleName" placeholder="e.g., 2-Hour Delay">
+        <button onclick="createSchedule()">Create New</button>
+    </div>
+
+    <div id="editorSection" class="section">
+        <h3>Edit Periods for Selected Schedule</h3>
+        
+        <p><strong>Quick Paste:</strong> Paste comma-separated list (Name, HH:MM, Name, HH:MM)</p>
+        <textarea id="pasteArea" rows="3" placeholder="Period 1, 08:00, Period 2, 08:45, Homeroom, 09:30"></textarea>
+        <button onclick="parsePaste()">Fill from Paste</button>
+        
+        <hr>
+        
+        <p><strong>Manual Entry (Up to 20):</strong></p>
+        <div id="periodInputs"></div>
+        
+        <br>
+        <button onclick="savePeriods()" style="background-color: #4CAF50; color: white;">Save All Periods</button>
+    </div>
+
+    <script>
+        // Initialize the 20 empty rows on page load
+        const container = document.getElementById('periodInputs');
+        for (let i = 1; i <= 20; i++) {
+            container.innerHTML += `
+                <div class="period-row">
+                    <span>${i}.</span>
+                    <input type="text" class="p-name" placeholder="Period Name">
+                    <input type="time" class="p-time">
+                </div>
+            `;
+        }
+
+        // Load schools for login
+        fetch('/api/schools').then(res => res.json()).then(schools => {
+            const select = document.getElementById('adminSchoolSelect');
+            schools.forEach(school => {
+                select.innerHTML += `<option value="${school.id}">${school.name}</option>`;
+            });
+        });
+
+        function login() {
+            const school_id = document.getElementById('adminSchoolSelect').value;
+            const password = document.getElementById('adminPassword').value;
+
+            fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ school_id, password })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('dashboardSection').style.display = 'block';
+                    loadSchedules();
+                } else {
+                    alert("Incorrect Password");
+                }
+            });
+        }
+
+        function loadSchedules() {
+            fetch('/api/admin/schedules').then(res => res.json()).then(schedules => {
+                const select = document.getElementById('scheduleSelect');
+                select.innerHTML = '<option value="">-- Select a Schedule to Edit --</option>';
+                schedules.forEach(s => {
+                    select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+            });
+        }
+
+        function showEditor() {
+            const schedule_id = document.getElementById('scheduleSelect').value;
+            if (schedule_id) {
+                document.getElementById('editorSection').style.display = 'block';
+                // Clear out inputs when switching schedules
+                document.querySelectorAll('.p-name').forEach(el => el.value = '');
+                document.querySelectorAll('.p-time').forEach(el => el.value = '');
+                document.getElementById('pasteArea').value = '';
+            } else {
+                document.getElementById('editorSection').style.display = 'none';
+            }
+        }
+
+        function setTodaysSchedule() {
+            const schedule_id = document.getElementById('scheduleSelect').value;
+            if (!schedule_id) return alert("Select a schedule!");
+            
+            fetch('/api/admin/set_today', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ schedule_id })
+            }).then(() => alert("Today's schedule updated successfully!"));
+        }
+
+        function createSchedule() {
+            const name = document.getElementById('newScheduleName').value;
+            if (!name) return alert("Enter a name!");
+            
+            fetch('/api/admin/schedules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            }).then(() => {
+                alert("Schedule created! Select it from the dropdown to add periods.");
+                document.getElementById('newScheduleName').value = '';
+                loadSchedules();
+            });
+        }
+
+        function parsePaste() {
+            const text = document.getElementById('pasteArea').value;
+            // Split by comma, trim spaces, remove empty strings
+            const parts = text.split(',').map(s => s.trim()).filter(s => s);
+            
+            const names = document.querySelectorAll('.p-name');
+            const times = document.querySelectorAll('.p-time');
+            
+            // Clear existing inputs before filling
+            names.forEach(n => n.value = '');
+            times.forEach(t => t.value = '');
+            
+            let rowIdx = 0;
+            // Iterate by 2 since data comes in pairs (Name, Time)
+            for (let i = 0; i < parts.length; i += 2) {
+                if (rowIdx >= 20) break; // Max 20 periods
+                
+                if (parts[i]) names[rowIdx].value = parts[i];
+                if (parts[i+1]) {
+                    // HTML <input type="time"> requires standard 24h format like "14:30" or "09:00"
+                    let timeStr = parts[i+1];
+                    // Ensure padding (e.g. "8:00" -> "08:00") so the input accepts it
+                    if (timeStr.length === 4 && timeStr.includes(':')) {
+                        timeStr = '0' + timeStr;
+                    }
+                    times[rowIdx].value = timeStr;
+                }
+                rowIdx++;
+            }
+        }
+
+        function savePeriods() {
+            const schedule_id = document.getElementById('scheduleSelect').value;
+            const periods = [];
+            const rows = document.querySelectorAll('.period-row');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.p-name').value.trim();
+                const time = row.querySelector('.p-time').value;
+                
+                if (name && time) {
+                    periods.push({ name: name, start_time: time });
+                }
+            });
+            
+            if (periods.length === 0) return alert("You must fill out at least one period with a name and time!");
+            
+            fetch('/api/admin/schedule_periods', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ schedule_id, periods })
+            }).then(res => res.json()).then(data => {
+                if (data.success) alert("Periods saved successfully!");
+            });
+        }
+    </script>
+</body>
+</html>
