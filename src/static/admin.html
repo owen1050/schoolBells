@@ -1,226 +1,1286 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; }
-        .section { display: none; margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;}
-        .period-row { margin-bottom: 8px; display: flex; gap: 10px; align-items: center; }
-        input[type="text"], input[type="password"], select { padding: 8px; }
-        input[type="time"] { padding: 6px; }
-        button { padding: 8px 12px; cursor: pointer; }
-        textarea { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 10px; }
-    </style>
+
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+    }
+
+    .section {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+    }
+
+    .period-row {
+        margin-bottom: 8px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select {
+        padding: 8px;
+    }
+
+    input[type="time"] {
+        padding: 6px;
+    }
+
+    button {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .setting-row {
+        margin: 12px 0;
+    }
+
+    .setting-row label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .help-text {
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 4px;
+    }
+
+    .button-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+</style>
+
 </head>
+
 <body>
-    <div id="loginSection" style="display:block;">
-        <h2>Admin Login</h2>
-        <select id="adminSchoolSelect"></select>
-        <input type="password" id="adminPassword" placeholder="Admin Password">
-        <button onclick="login()">Login</button>
-    </div>
 
-    <div id="dashboardSection" class="section">
-        <h2>Manage Schedules</h2>
-        
-        <label>Select Existing Schedule:</label>
-        <select id="scheduleSelect" onchange="showEditor()"></select>
-        <button onclick="setTodaysSchedule()">Set as Today's Schedule</button>
-        
-        <hr>
-        
-        <h3>Or Create New Schedule</h3>
-        <input type="text" id="newScheduleName" placeholder="e.g., 2-Hour Delay">
-        <button onclick="createSchedule()">Create New</button>
-    </div>
 
-    <div id="editorSection" class="section">
-        <h3>Edit Periods for Selected Schedule</h3>
-        
-        <p><strong>Quick Paste:</strong> Paste comma-separated list (Name, HH:MM, Name, HH:MM)</p>
-        <textarea id="pasteArea" rows="3" placeholder="Period 1, 08:00, Period 2, 08:45, Homeroom, 09:30"></textarea>
-        <button onclick="parsePaste()">Fill from Paste</button>
-        
-        <hr>
-        
-        <p><strong>Manual Entry (Up to 30):</strong></p>
-        <div id="periodInputs"></div>
-        
+<!-- LOGIN -->
+
+<div id="loginSection" style="display:block;">
+
+    <h2>Admin Login</h2>
+
+    <select id="adminSchoolSelect"></select>
+
+    <input
+        type="password"
+        id="adminPassword"
+        placeholder="Admin Password"
+    >
+
+    <button onclick="login()">Login</button>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboardSection" class="section">
+
+    <h2>Manage Schedules</h2>
+
+    <label>Select Existing Schedule:</label>
+
+    <select
+        id="scheduleSelect"
+        onchange="showEditor()"
+    ></select>
+
+    <button onclick="setTodaysSchedule()">
+        Set as Today's Schedule
+    </button>
+
+
+    <hr>
+
+
+    <h3>Bell Clock Settings</h3>
+
+    <div class="setting-row">
+
+        <label for="offsetSeconds">
+            Bell Time Offset (seconds)
+        </label>
+
+        <input
+            type="number"
+            id="offsetSeconds"
+            value="0"
+            step="1"
+        >
+
+        <div class="help-text">
+            Positive values make bell time run ahead of real time.
+            Negative values make it run behind.
+            For example, +30 means the bell clock is 30 seconds ahead.
+        </div>
+
         <br>
-        <button onclick="savePeriods()" style="background-color: #4CAF50; color: white;">Save All Periods</button>
+
+        <button onclick="saveOffset()">
+            Save Bell Offset
+        </button>
+
     </div>
 
-    <script>
-        // Initialize the 20 empty rows on page load
-        const container = document.getElementById('periodInputs');
-        for (let i = 1; i <= 30; i++) {
-            container.innerHTML += `
-                <div class="period-row">
-                    <span>${i}.</span>
-                    <input type="text" class="p-name" placeholder="Period Name">
-                    <input type="time" class="p-time">
-                </div>
-            `;
-        }
 
-        // Load schools for login
-        fetch('/api/schools').then(res => res.json()).then(schools => {
-            const select = document.getElementById('adminSchoolSelect');
+    <hr>
+
+
+    <h3>Or Create New Schedule</h3>
+
+    <input
+        type="text"
+        id="newScheduleName"
+        placeholder="e.g., 2-Hour Delay"
+    >
+
+    <button onclick="createSchedule()">
+        Create New
+    </button>
+
+</div>
+
+
+<!-- SCHEDULE EDITOR -->
+
+<div id="editorSection" class="section">
+
+    <h3>Edit Schedule</h3>
+
+
+    <div class="setting-row">
+
+        <label for="endOfSchool">
+            End of School
+        </label>
+
+        <input
+            type="time"
+            id="endOfSchool"
+        >
+
+        <div class="help-text">
+            The public timer will display "END OF SCHOOL"
+            once this time is reached.
+        </div>
+
+    </div>
+
+
+    <hr>
+
+
+    <h3>Edit Periods</h3>
+
+    <p>
+        <strong>Quick Paste:</strong>
+        Paste comma-separated list
+        (Name, HH:MM, Name, HH:MM)
+    </p>
+
+    <textarea
+        id="pasteArea"
+        rows="3"
+        placeholder="Period 1, 08:00, Period 2, 08:45, Homeroom, 09:30"
+    ></textarea>
+
+    <div class="button-row">
+
+        <button onclick="parsePaste()">
+            Fill from Paste
+        </button>
+
+        <button onclick="copyQuickPaste()">
+            Copy Quick Paste
+        </button>
+
+    </div>
+
+
+    <hr>
+
+
+    <p>
+        <strong>Manual Entry (Up to 30):</strong>
+    </p>
+
+    <div id="periodInputs"></div>
+
+    <br>
+
+    <button
+        onclick="savePeriods()"
+        style="background-color: #4CAF50; color: white;"
+    >
+        Save All Periods
+    </button>
+
+</div>
+
+
+<script>
+
+    // ---------------------------------------------------------
+    // Initialize 30 period rows
+    // ---------------------------------------------------------
+
+    const container =
+        document.getElementById('periodInputs');
+
+    for (let i = 1; i <= 30; i++) {
+
+        container.innerHTML += `
+            <div class="period-row">
+
+                <span>${i}.</span>
+
+                <input
+                    type="text"
+                    class="p-name"
+                    placeholder="Period Name"
+                >
+
+                <input
+                    type="time"
+                    class="p-time"
+                >
+
+            </div>
+        `;
+    }
+
+
+    // ---------------------------------------------------------
+    // Load schools
+    // ---------------------------------------------------------
+
+    fetch('/api/schools')
+        .then(res => res.json())
+        .then(schools => {
+
+            const select =
+                document.getElementById(
+                    'adminSchoolSelect'
+                );
+
             schools.forEach(school => {
-                select.innerHTML += `<option value="${school.id}">${school.name}</option>`;
+
+                select.innerHTML += `
+                    <option value="${school.id}">
+                        ${school.name}
+                    </option>
+                `;
+
             });
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Error loading schools:',
+                err
+            );
+
         });
 
-        function login() {
-            const school_id = document.getElementById('adminSchoolSelect').value;
-            const password = document.getElementById('adminPassword').value;
 
-            fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ school_id, password })
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('dashboardSection').style.display = 'block';
-                    loadSchedules();
-                } else {
-                    alert("Incorrect Password");
-                }
-            });
-        }
+    // ---------------------------------------------------------
+    // LOGIN
+    // ---------------------------------------------------------
 
-        function loadSchedules() {
-            fetch('/api/admin/schedules').then(res => res.json()).then(schedules => {
-                const select = document.getElementById('scheduleSelect');
-                select.innerHTML = '<option value="">-- Select a Schedule to Edit --</option>';
-                schedules.forEach(s => {
-                    select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-                });
-            });
-        }
+    function login() {
 
-        function clearPeriodInputs() {
-  document.querySelectorAll('.p-name').forEach(el => el.value = '');
-  document.querySelectorAll('.p-time').forEach(el => el.value = '');
-}
+        const school_id =
+            document.getElementById(
+                'adminSchoolSelect'
+            ).value;
 
-function fillPeriodInputs(periods) {
-  clearPeriodInputs();
-  const names = document.querySelectorAll('.p-name');
-  const times = document.querySelectorAll('.p-time');
+        const password =
+            document.getElementById(
+                'adminPassword'
+            ).value;
 
-  periods.slice(0, 30).forEach((p, i) => {
-    names[i].value = p.name || '';
-    times[i].value = p.start_time || '';
-  });
-}
 
-function showEditor() {
-  const schedule_id = document.getElementById('scheduleSelect').value;
-  if (!schedule_id) {
-    document.getElementById('editorSection').style.display = 'none';
-    return;
-  }
+        fetch('/api/admin/login', {
 
-  document.getElementById('editorSection').style.display = 'block';
-  document.getElementById('pasteArea').value = '';
-  clearPeriodInputs();
+            method: 'POST',
 
-  fetch(`/api/admin/schedule_periods/${schedule_id}`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(periods => fillPeriodInputs(periods))
-    .catch(err => {
-      console.error('Error loading periods:', err);
-      // Leave blanks if it fails
-    });
-}
+            headers: {
+                'Content-Type': 'application/json'
+            },
 
-        function setTodaysSchedule() {
-            const schedule_id = document.getElementById('scheduleSelect').value;
-            if (!schedule_id) return alert("Select a schedule!");
-            
-            fetch('/api/admin/set_today', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ schedule_id })
-            }).then(() => alert("Today's schedule updated successfully!"));
-        }
+            body: JSON.stringify({
+                school_id,
+                password
+            })
 
-        function createSchedule() {
-            const name = document.getElementById('newScheduleName').value;
-            if (!name) return alert("Enter a name!");
-            
-            fetch('/api/admin/schedules', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            }).then(() => {
-                alert("Schedule created! Select it from the dropdown to add periods.");
-                document.getElementById('newScheduleName').value = '';
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.success) {
+
+                document.getElementById(
+                    'loginSection'
+                ).style.display = 'none';
+
+                document.getElementById(
+                    'dashboardSection'
+                ).style.display = 'block';
+
                 loadSchedules();
-            });
-        }
+                loadOffset();
 
-        function parsePaste() {
-            const text = document.getElementById('pasteArea').value;
-            // Split by comma, trim spaces, remove empty strings
-            const parts = text.split(',').map(s => s.trim()).filter(s => s);
-            
-            const names = document.querySelectorAll('.p-name');
-            const times = document.querySelectorAll('.p-time');
-            
-            // Clear existing inputs before filling
-            names.forEach(n => n.value = '');
-            times.forEach(t => t.value = '');
-            
-            let rowIdx = 0;
-            // Iterate by 2 since data comes in pairs (Name, Time)
-            for (let i = 0; i < parts.length; i += 2) {
-                if (rowIdx >= 30) break; // Max 20 periods
-                
-                if (parts[i]) names[rowIdx].value = parts[i];
-                if (parts[i+1]) {
-                    // HTML <input type="time"> requires standard 24h format like "14:30" or "09:00"
-                    let timeStr = parts[i+1];
-                    // Ensure padding (e.g. "8:00" -> "08:00") so the input accepts it
-                    if (timeStr.length === 4 && timeStr.includes(':')) {
-                        timeStr = '0' + timeStr;
-                    }
-                    times[rowIdx].value = timeStr;
-                }
-                rowIdx++;
+            } else {
+
+                alert("Incorrect Password");
+
             }
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Login error:',
+                err
+            );
+
+            alert(
+                "Error connecting to server."
+            );
+
+        });
+    }
+
+
+    // ---------------------------------------------------------
+    // LOAD SCHEDULES
+    // ---------------------------------------------------------
+
+    function loadSchedules() {
+
+        fetch('/api/admin/schedules')
+            .then(res => {
+
+                if (!res.ok) {
+                    throw new Error(
+                        `HTTP ${res.status}`
+                    );
+                }
+
+                return res.json();
+
+            })
+            .then(schedules => {
+
+                const select =
+                    document.getElementById(
+                        'scheduleSelect'
+                    );
+
+                select.innerHTML =
+                    '<option value="">-- Select a Schedule to Edit --</option>';
+
+                schedules.forEach(s => {
+
+                    select.innerHTML += `
+                        <option value="${s.id}">
+                            ${s.name}
+                        </option>
+                    `;
+
+                });
+
+            })
+            .catch(err => {
+
+                console.error(
+                    'Error loading schedules:',
+                    err
+                );
+
+            });
+    }
+
+
+    // ---------------------------------------------------------
+    // BELL OFFSET
+    // ---------------------------------------------------------
+
+    function loadOffset() {
+
+        fetch('/api/admin/offset')
+            .then(res => res.json())
+            .then(data => {
+
+                document.getElementById(
+                    'offsetSeconds'
+                ).value =
+                    data.offset_seconds || 0;
+
+            })
+            .catch(err => {
+
+                console.error(
+                    'Error loading offset:',
+                    err
+                );
+
+            });
+    }
+
+
+    function saveOffset() {
+
+        const offset =
+            parseInt(
+                document.getElementById(
+                    'offsetSeconds'
+                ).value,
+                10
+            );
+
+
+        if (Number.isNaN(offset)) {
+
+            alert(
+                "Bell offset must be a number."
+            );
+
+            return;
         }
 
-        function savePeriods() {
-            const schedule_id = document.getElementById('scheduleSelect').value;
-            const periods = [];
-            const rows = document.querySelectorAll('.period-row');
-            
-            rows.forEach(row => {
-                const name = row.querySelector('.p-name').value.trim();
-                const time = row.querySelector('.p-time').value;
-                
-                if (name && time) {
-                    periods.push({ name: name, start_time: time });
-                }
+
+        fetch('/api/admin/offset', {
+
+            method: 'POST',
+
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+                offset_seconds: offset
+            })
+
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.success) {
+
+                alert(
+                    `Bell offset saved: ${data.offset_seconds} seconds`
+                );
+
+            } else {
+
+                alert(
+                    data.message ||
+                    "Unable to save bell offset."
+                );
+
+            }
+
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            alert(
+                "Error saving bell offset."
+            );
+
+        });
+    }
+
+
+    // ---------------------------------------------------------
+    // PERIOD INPUT HELPERS
+    // ---------------------------------------------------------
+
+    function clearPeriodInputs() {
+
+        document
+            .querySelectorAll('.p-name')
+            .forEach(el => el.value = '');
+
+        document
+            .querySelectorAll('.p-time')
+            .forEach(el => el.value = '');
+    }
+
+
+    function fillPeriodInputs(periods) {
+
+        clearPeriodInputs();
+
+        const names =
+            document.querySelectorAll('.p-name');
+
+        const times =
+            document.querySelectorAll('.p-time');
+
+
+        periods
+            .slice(0, 30)
+            .forEach((p, i) => {
+
+                names[i].value =
+                    p.name || '';
+
+                times[i].value =
+                    p.start_time || '';
+
             });
-            
-            if (periods.length === 0) return alert("You must fill out at least one period with a name and time!");
-            
-            fetch('/api/admin/schedule_periods', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ schedule_id, periods })
-            }).then(res => res.json()).then(data => {
-                if (data.success) alert("Periods saved successfully!");
-            });
+    }
+
+
+    // ---------------------------------------------------------
+    // SHOW SCHEDULE EDITOR
+    // ---------------------------------------------------------
+
+    function showEditor() {
+
+        const schedule_id =
+            document.getElementById(
+                'scheduleSelect'
+            ).value;
+
+
+        if (!schedule_id) {
+
+            document.getElementById(
+                'editorSection'
+            ).style.display = 'none';
+
+            clearPeriodInputs();
+
+            document.getElementById(
+                'endOfSchool'
+            ).value = '';
+
+            return;
         }
-    </script>
+
+
+        document.getElementById(
+            'editorSection'
+        ).style.display = 'block';
+
+
+        document.getElementById(
+            'pasteArea'
+        ).value = '';
+
+
+        clearPeriodInputs();
+
+
+        fetch(
+            `/api/admin/schedule_periods/${schedule_id}`
+        )
+        .then(res => {
+
+            if (!res.ok) {
+                throw new Error(
+                    `HTTP ${res.status}`
+                );
+            }
+
+            return res.json();
+
+        })
+        .then(data => {
+
+            fillPeriodInputs(
+                data.periods || []
+            );
+
+            document.getElementById(
+                'endOfSchool'
+            ).value =
+                data.end_of_school || '';
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Error loading schedule:',
+                err
+            );
+
+            alert(
+                "Unable to load this schedule."
+            );
+
+        });
+
+    }
+
+
+    // ---------------------------------------------------------
+    // COPY QUICK PASTE
+    // ---------------------------------------------------------
+
+    function copyQuickPaste() {
+
+        const names =
+            document.querySelectorAll('.p-name');
+
+        const times =
+            document.querySelectorAll('.p-time');
+
+        const parts = [];
+
+
+        for (
+            let i = 0;
+            i < names.length;
+            i++
+        ) {
+
+            const name =
+                names[i].value.trim();
+
+            const time =
+                times[i].value;
+
+
+            if (name && time) {
+
+                parts.push(name);
+                parts.push(time);
+
+            }
+
+        }
+
+
+        if (parts.length === 0) {
+
+            alert(
+                "There are no periods to copy."
+            );
+
+            return;
+
+        }
+
+
+        const quickPaste =
+            parts.join(', ');
+
+
+        // Put the generated string in the
+        // Quick Paste box as well.
+
+        document.getElementById(
+            'pasteArea'
+        ).value =
+            quickPaste;
+
+
+        // Copy it to clipboard.
+
+        if (
+            navigator.clipboard &&
+            navigator.clipboard.writeText
+        ) {
+
+            navigator.clipboard
+                .writeText(quickPaste)
+                .then(() => {
+
+                    alert(
+                        "Quick Paste string copied to clipboard!"
+                    );
+
+                })
+                .catch(err => {
+
+                    console.error(
+                        "Clipboard error:",
+                        err
+                    );
+
+                    fallbackCopy(
+                        quickPaste
+                    );
+
+                });
+
+        } else {
+
+            fallbackCopy(
+                quickPaste
+            );
+
+        }
+
+    }
+
+
+    // ---------------------------------------------------------
+    // CLIPBOARD FALLBACK
+    // ---------------------------------------------------------
+
+    function fallbackCopy(text) {
+
+        const textarea =
+            document.createElement(
+                'textarea'
+            );
+
+
+        textarea.value =
+            text;
+
+
+        textarea.style.position =
+            'fixed';
+
+        textarea.style.left =
+            '-9999px';
+
+
+        document.body.appendChild(
+            textarea
+        );
+
+
+        textarea.focus();
+        textarea.select();
+
+
+        try {
+
+            document.execCommand(
+                'copy'
+            );
+
+            alert(
+                "Quick Paste string copied to clipboard!"
+            );
+
+        }
+
+        catch (err) {
+
+            console.error(
+                "Copy failed:",
+                err
+            );
+
+            alert(
+                "Could not automatically copy the text. The Quick Paste box has been filled, so you can copy it manually."
+            );
+
+        }
+
+
+        document.body.removeChild(
+            textarea
+        );
+
+    }
+
+
+    // ---------------------------------------------------------
+    // SAVE END OF SCHOOL
+    // ---------------------------------------------------------
+
+    function saveScheduleSettings() {
+
+        const schedule_id =
+            document.getElementById(
+                'scheduleSelect'
+            ).value;
+
+        const end_of_school =
+            document.getElementById(
+                'endOfSchool'
+            ).value;
+
+
+        return fetch(
+            '/api/admin/schedule_settings',
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    schedule_id,
+                    end_of_school
+                })
+
+            }
+        )
+        .then(res => {
+
+            if (!res.ok) {
+
+                throw new Error(
+                    `HTTP ${res.status}`
+                );
+
+            }
+
+            return res.json();
+
+        });
+
+    }
+
+
+    // ---------------------------------------------------------
+    // SET TODAY'S SCHEDULE
+    // ---------------------------------------------------------
+
+    function setTodaysSchedule() {
+
+        const schedule_id =
+            document.getElementById(
+                'scheduleSelect'
+            ).value;
+
+
+        if (!schedule_id) {
+
+            return alert(
+                "Select a schedule!"
+            );
+
+        }
+
+
+        fetch(
+            '/api/admin/set_today',
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    schedule_id
+                })
+
+            }
+        )
+        .then(res => {
+
+            if (!res.ok) {
+
+                throw new Error(
+                    `HTTP ${res.status}`
+                );
+
+            }
+
+            return res.json();
+
+        })
+        .then(data => {
+
+            if (data.success) {
+
+                alert(
+                    "Today's schedule updated successfully!"
+                );
+
+            } else {
+
+                alert(
+                    "Unable to update today's schedule."
+                );
+
+            }
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Error setting today:',
+                err
+            );
+
+            alert(
+                "Error updating today's schedule."
+            );
+
+        });
+
+    }
+
+
+    // ---------------------------------------------------------
+    // CREATE SCHEDULE
+    // ---------------------------------------------------------
+
+    function createSchedule() {
+
+        const name =
+            document.getElementById(
+                'newScheduleName'
+            ).value.trim();
+
+
+        if (!name) {
+
+            return alert(
+                "Enter a name!"
+            );
+
+        }
+
+
+        fetch(
+            '/api/admin/schedules',
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    name
+                })
+
+            }
+        )
+        .then(res => {
+
+            if (!res.ok) {
+
+                throw new Error(
+                    `HTTP ${res.status}`
+                );
+
+            }
+
+            return res.json();
+
+        })
+        .then(data => {
+
+            if (!data.success) {
+
+                throw new Error(
+                    "Schedule creation failed."
+                );
+
+            }
+
+
+            alert(
+                "Schedule created! Select it from the dropdown to add periods."
+            );
+
+
+            document.getElementById(
+                'newScheduleName'
+            ).value = '';
+
+
+            loadSchedules();
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Error creating schedule:',
+                err
+            );
+
+            alert(
+                "Error creating schedule."
+            );
+
+        });
+
+    }
+
+
+    // ---------------------------------------------------------
+    // QUICK PASTE → PERIOD INPUTS
+    // ---------------------------------------------------------
+
+    function parsePaste() {
+
+        const text =
+            document.getElementById(
+                'pasteArea'
+            ).value;
+
+
+        const parts =
+            text
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s);
+
+
+        const names =
+            document.querySelectorAll(
+                '.p-name'
+            );
+
+        const times =
+            document.querySelectorAll(
+                '.p-time'
+            );
+
+
+        names.forEach(
+            n => n.value = ''
+        );
+
+        times.forEach(
+            t => t.value = ''
+        );
+
+
+        let rowIdx = 0;
+
+
+        for (
+            let i = 0;
+            i < parts.length;
+            i += 2
+        ) {
+
+            if (rowIdx >= 30)
+                break;
+
+
+            if (parts[i]) {
+
+                names[rowIdx].value =
+                    parts[i];
+
+            }
+
+
+            if (parts[i + 1]) {
+
+                let timeStr =
+                    parts[i + 1];
+
+
+                // Convert 8:00 → 08:00
+
+                if (
+                    timeStr.length === 4 &&
+                    timeStr.includes(':')
+                ) {
+
+                    timeStr =
+                        '0' + timeStr;
+
+                }
+
+
+                times[rowIdx].value =
+                    timeStr;
+
+            }
+
+
+            rowIdx++;
+
+        }
+
+    }
+
+
+    // ---------------------------------------------------------
+    // SAVE PERIODS + SETTINGS
+    // ---------------------------------------------------------
+
+    function savePeriods() {
+
+        const schedule_id =
+            document.getElementById(
+                'scheduleSelect'
+            ).value;
+
+
+        if (!schedule_id) {
+
+            return alert(
+                "Select a schedule first."
+            );
+
+        }
+
+
+        const periods = [];
+
+
+        const rows =
+            document.querySelectorAll(
+                '.period-row'
+            );
+
+
+        rows.forEach(row => {
+
+            const name =
+                row
+                    .querySelector('.p-name')
+                    .value
+                    .trim();
+
+
+            const time =
+                row
+                    .querySelector('.p-time')
+                    .value;
+
+
+            if (name && time) {
+
+                periods.push({
+                    name: name,
+                    start_time: time
+                });
+
+            }
+
+        });
+
+
+        if (periods.length === 0) {
+
+            return alert(
+                "You must fill out at least one period with a name and time!"
+            );
+
+        }
+
+
+        // Save periods first
+
+        fetch(
+            '/api/admin/schedule_periods',
+            {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    schedule_id,
+                    periods
+                })
+
+            }
+        )
+        .then(res => {
+
+            if (!res.ok) {
+
+                throw new Error(
+                    `HTTP ${res.status}`
+                );
+
+            }
+
+            return res.json();
+
+        })
+        .then(data => {
+
+            if (!data.success) {
+
+                throw new Error(
+                    "Unable to save periods."
+                );
+
+            }
+
+
+            // Then save End of School
+
+            return saveScheduleSettings();
+
+        })
+        .then(data => {
+
+            if (data.success) {
+
+                alert(
+                    "Schedule saved successfully!"
+                );
+
+            } else {
+
+                alert(
+                    "Periods saved, but End of School could not be saved."
+                );
+
+            }
+
+        })
+        .catch(err => {
+
+            console.error(
+                'Error saving schedule:',
+                err
+            );
+
+            alert(
+                "Error saving schedule."
+            );
+
+        });
+
+    }
+
+</script>
+
+
 </body>
+
 </html>
