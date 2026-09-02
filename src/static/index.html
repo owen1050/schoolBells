@@ -1,277 +1,1100 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <title>School Bell Schedules</title>
+
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; text-align: center; }
-        select { padding: 10px; font-size: 16px; margin: 20px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        
-        /* Countdown styles */
-        #countdownContainer { margin: 20px 0 60px 0; display: none; }
-        #countdownTimer { font-size: 8em; font-weight: bold; color: #333; margin: 10px 0; }
-        #countdownLabel { font-size: 1.5em; color: #666; }
-        
-        .active-period { background-color: #e6f7ff; font-weight: bold; }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            text-align: center;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        #countdownContainer {
+            margin: 20px 0 60px 0;
+            display: none;
+        }
+
+        #countdownTimer {
+            font-size: 8em;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        #countdownLabel {
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        .active-period {
+            background-color: #e6f7ff;
+            font-weight: bold;
+        }
+
     </style>
+
 </head>
 
+
 <body>
+
+
     <div id="countdownContainer">
-        <div id="countdownLabel">Waiting for schedule...</div>
-        <div id="countdownTimer">--:--:--</div>
+
+        <div id="countdownLabel">
+            Waiting for schedule...
+        </div>
+
+        <div id="countdownTimer">
+            --:--:--
+        </div>
+
     </div>
+
 
     <h1>Select Your School</h1>
-    <select id="schoolSelect" onchange="loadSchedule()">
-        <option value="">-- Choose a School --</option>
+
+
+    <select
+        id="schoolSelect"
+        onchange="loadSchedule()"
+    >
+
+        <option value="">
+            -- Choose a School --
+        </option>
+
     </select>
 
-    <div id="scheduleContainer" style="display:none;">
+
+    <div
+        id="scheduleContainer"
+        style="display:none;"
+    >
+
         <h2 id="scheduleName"></h2>
+
+
         <table>
+
             <thead>
+
                 <tr>
+
                     <th>Period</th>
+
                     <th>Start</th>
+
                     <th>End</th>
+
                 </tr>
+
             </thead>
+
+
             <tbody id="periodList"></tbody>
+
         </table>
+
     </div>
 
+
     <script>
+
+        // ---------------------------------------------------------
+        // STATE
+        // ---------------------------------------------------------
+
         let currentPeriods = [];
+
         let timerInterval = null;
+
         let refreshInterval = null;
+
         let currentSchoolId = null;
+
         let lastScheduleFingerprint = null;
 
+        let currentOffsetSeconds = 0;
+
+        let currentEndOfSchool = "";
+
+
+        // ---------------------------------------------------------
+        // URL HELPERS
+        // ---------------------------------------------------------
+
         function getSchoolIdFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const v = params.get('school');
-            if (!v) return null;
-            if (!/^\d+$/.test(v)) return null;
+
+            const params =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            const v =
+                params.get('school');
+
+
+            if (!v)
+                return null;
+
+
+            if (!/^\d+$/.test(v))
+                return null;
+
+
             return v;
+
         }
+
 
         function setSchoolIdInUrl(schoolId) {
-            const url = new URL(window.location.href);
+
+            const url =
+                new URL(
+                    window.location.href
+                );
+
+
             if (!schoolId) {
-                url.searchParams.delete('school');
+
+                url.searchParams.delete(
+                    'school'
+                );
+
             } else {
-                url.searchParams.set('school', String(schoolId));
+
+                url.searchParams.set(
+                    'school',
+                    String(schoolId)
+                );
+
             }
-            window.history.pushState({}, '', url);
+
+
+            window.history.pushState(
+                {},
+                '',
+                url
+            );
+
         }
+
+
+        // ---------------------------------------------------------
+        // SCHEDULE FINGERPRINT
+        // ---------------------------------------------------------
 
         function fingerprintSchedule(data) {
-            // A stable string to detect changes every 5 minutes
+
             return JSON.stringify({
-                schedule_name: data && data.schedule_name,
-                periods: Array.isArray(data && data.periods) ? data.periods : []
+
+                schedule_name:
+                    data &&
+                    data.schedule_name,
+
+                end_of_school:
+                    data &&
+                    data.end_of_school,
+
+                offset_seconds:
+                    data &&
+                    data.offset_seconds,
+
+                periods:
+                    Array.isArray(
+                        data &&
+                        data.periods
+                    )
+                        ? data.periods
+                        : []
+
             });
+
         }
+
+
+        // ---------------------------------------------------------
+        // REFRESH TIMER
+        // ---------------------------------------------------------
 
         function stopRefreshTimer() {
+
             if (refreshInterval) {
-                clearInterval(refreshInterval);
+
+                clearInterval(
+                    refreshInterval
+                );
+
                 refreshInterval = null;
+
             }
+
         }
+
 
         function startRefreshTimer() {
+
             stopRefreshTimer();
-            // Check for changes every 5 minutes
-            refreshInterval = setInterval(() => {
-                if (currentSchoolId) {
-                    loadSchedule(currentSchoolId, { updateUrl: false, silent: true });
-                }
-            }, 5 * 60 * 1000);
+
+
+            // Check for schedule/settings changes
+            // every 5 minutes
+
+            refreshInterval =
+                setInterval(() => {
+
+                    if (currentSchoolId) {
+
+                        loadSchedule(
+                            currentSchoolId,
+                            {
+                                updateUrl: false,
+                                silent: true
+                            }
+                        );
+
+                    }
+
+                }, 5 * 60 * 1000);
+
         }
 
-        // Load schools on page load, then auto-select from URL if present
+
+        // ---------------------------------------------------------
+        // LOAD SCHOOLS
+        // ---------------------------------------------------------
+
         fetch('/api/schools')
+
             .then(res => res.json())
+
             .then(schools => {
-                const select = document.getElementById('schoolSelect');
+
+                const select =
+                    document.getElementById(
+                        'schoolSelect'
+                    );
+
+
                 schools.forEach(school => {
-                    const option = document.createElement('option');
-                    option.value = school.id;
-                    option.innerText = school.name;
-                    select.appendChild(option);
+
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+
+                    option.value =
+                        school.id;
+
+
+                    option.innerText =
+                        school.name;
+
+
+                    select.appendChild(
+                        option
+                    );
+
                 });
 
-                const fromUrl = getSchoolIdFromUrl();
+
+                const fromUrl =
+                    getSchoolIdFromUrl();
+
+
                 if (fromUrl) {
-                    select.value = fromUrl;
-                    loadSchedule(fromUrl, { updateUrl: false, silent: false });
+
+                    select.value =
+                        fromUrl;
+
+
+                    loadSchedule(
+                        fromUrl,
+                        {
+                            updateUrl: false,
+                            silent: false
+                        }
+                    );
+
                 }
+
             })
-            .catch(err => console.error('Error fetching schools:', err));
 
-        function loadSchedule(forcedSchoolId, opts) {
-            const options = Object.assign({ updateUrl: true, silent: false }, opts || {});
-            const schoolId = forcedSchoolId || document.getElementById('schoolSelect').value;
-            currentSchoolId = schoolId || null;
+            .catch(err =>
+                console.error(
+                    'Error fetching schools:',
+                    err
+                )
+            );
 
-            if (options.updateUrl) setSchoolIdInUrl(schoolId);
+
+        // ---------------------------------------------------------
+        // LOAD SCHEDULE
+        // ---------------------------------------------------------
+
+        function loadSchedule(
+            forcedSchoolId,
+            opts
+        ) {
+
+            const options =
+                Object.assign(
+                    {
+                        updateUrl: true,
+                        silent: false
+                    },
+                    opts || {}
+                );
+
+
+            const schoolId =
+                forcedSchoolId ||
+                document.getElementById(
+                    'schoolSelect'
+                ).value;
+
+
+            currentSchoolId =
+                schoolId || null;
+
+
+            if (options.updateUrl) {
+
+                setSchoolIdInUrl(
+                    schoolId
+                );
+
+            }
+
 
             if (!schoolId) {
-                document.getElementById('scheduleContainer').style.display = 'none';
-                document.getElementById('countdownContainer').style.display = 'none';
-                clearInterval(timerInterval);
+
+                document.getElementById(
+                    'scheduleContainer'
+                ).style.display =
+                    'none';
+
+
+                document.getElementById(
+                    'countdownContainer'
+                ).style.display =
+                    'none';
+
+
+                clearInterval(
+                    timerInterval
+                );
+
+
                 stopRefreshTimer();
-                lastScheduleFingerprint = null;
+
+
+                lastScheduleFingerprint =
+                    null;
+
+
                 return;
+
             }
+
 
             startRefreshTimer();
 
+
             if (!options.silent) {
-                document.getElementById('countdownContainer').style.display = 'block';
-                document.getElementById('countdownLabel').innerText = 'Loading schedule...';
-                document.getElementById('countdownTimer').innerText = '--:--:--';
+
+                document.getElementById(
+                    'countdownContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
+                    'countdownLabel'
+                ).innerText =
+                    'Loading schedule...';
+
+
+                document.getElementById(
+                    'countdownTimer'
+                ).innerText =
+                    '--:--:--';
+
             }
 
-            fetch(`/api/schedule/today/${schoolId}`)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return res.json();
-                })
-                .then(data => {
-                    const fp = fingerprintSchedule(data);
-                    if (options.silent && lastScheduleFingerprint && fp === lastScheduleFingerprint) {
-                        // No changes detected
-                        return;
+
+            fetch(
+                `/api/schedule/today/${schoolId}`
+            )
+
+            .then(res => {
+
+                if (!res.ok)
+                    throw new Error(
+                        `HTTP ${res.status}`
+                    );
+
+                return res.json();
+
+            })
+
+            .then(data => {
+
+                const fp =
+                    fingerprintSchedule(
+                        data
+                    );
+
+
+                if (
+                    options.silent &&
+                    lastScheduleFingerprint &&
+                    fp ===
+                        lastScheduleFingerprint
+                ) {
+
+                    return;
+
+                }
+
+
+                lastScheduleFingerprint =
+                    fp;
+
+
+                document.getElementById(
+                    'scheduleContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
+                    'countdownContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
+                    'scheduleName'
+                ).innerText =
+                    "Today's Schedule: " +
+                    data.schedule_name;
+
+
+                // -------------------------------------------------
+                // Load bell settings
+                // -------------------------------------------------
+
+                currentOffsetSeconds =
+                    Number(
+                        data.offset_seconds || 0
+                    );
+
+
+                currentEndOfSchool =
+                    data.end_of_school || "";
+
+
+                // -------------------------------------------------
+                // Load periods
+                // -------------------------------------------------
+
+                const tbody =
+                    document.getElementById(
+                        'periodList'
+                    );
+
+
+                tbody.innerHTML = '';
+
+
+                currentPeriods =
+                    Array.isArray(
+                        data.periods
+                    )
+                        ? data.periods
+                        : [];
+
+
+                if (
+                    currentPeriods.length === 0
+                ) {
+
+                    tbody.innerHTML =
+                        '<tr><td colspan="3">No periods found for today.</td></tr>';
+
+
+                    document.getElementById(
+                        'countdownLabel'
+                    ).innerText =
+                        'No schedule periods available';
+
+
+                    document.getElementById(
+                        'countdownTimer'
+                    ).innerText =
+                        '--:--:--';
+
+
+                    clearInterval(
+                        timerInterval
+                    );
+
+
+                    return;
+
+                }
+
+
+                currentPeriods.forEach(
+                    (p, index) => {
+
+                        const end =
+                            p.end_time || "";
+
+
+                        tbody.innerHTML += `
+
+                            <tr id="row-${index}">
+
+                                <td>
+                                    ${p.name}
+                                </td>
+
+                                <td>
+                                    ${p.start_time}
+                                </td>
+
+                                <td>
+                                    ${end}
+                                </td>
+
+                            </tr>
+
+                        `;
+
                     }
-                    lastScheduleFingerprint = fp;
+                );
 
-                    document.getElementById('scheduleContainer').style.display = 'block';
-                    document.getElementById('countdownContainer').style.display = 'block';
-                    document.getElementById('scheduleName').innerText = "Today's Schedule: " + data.schedule_name;
-                    
-                    const tbody = document.getElementById('periodList');
-                    tbody.innerHTML = '';
-                    
-                    currentPeriods = Array.isArray(data.periods) ? data.periods : [];
 
-                    if (currentPeriods.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="3">No periods found for today.</td></tr>';
-                        document.getElementById('countdownLabel').innerText = 'No schedule periods available';
-                        document.getElementById('countdownTimer').innerText = '--:--:--';
-                        clearInterval(timerInterval);
-                        return;
-                    }
+                // Start countdown
 
-                    currentPeriods.forEach((p, index) => {
-                        const end = p.end_time || "";
-                        tbody.innerHTML += `<tr id="row-${index}"><td>${p.name}</td><td>${p.start_time}</td><td>${end}</td></tr>`;
-                    });
+                if (timerInterval)
+                    clearInterval(
+                        timerInterval
+                    );
 
-                    // Start the countdown logic
-                    if (timerInterval) clearInterval(timerInterval);
-                    updateCountdown();
-                    timerInterval = setInterval(updateCountdown, 1000);
-                })
-                .catch(err => {
-                    console.error('Error fetching schedule:', err);
-                    document.getElementById('scheduleContainer').style.display = 'block';
-                    document.getElementById('countdownContainer').style.display = 'block';
-                    document.getElementById('scheduleName').innerText = "Today's Schedule";
-                    document.getElementById('periodList').innerHTML = '<tr><td colspan="3">Error loading schedule.</td></tr>';
-                    document.getElementById('countdownLabel').innerText = 'Unable to load schedule';
-                    document.getElementById('countdownTimer').innerText = '--:--:--';
-                    clearInterval(timerInterval);
-                });
+
+                updateCountdown();
+
+
+                timerInterval =
+                    setInterval(
+                        updateCountdown,
+                        1000
+                    );
+
+            })
+
+            .catch(err => {
+
+                console.error(
+                    'Error fetching schedule:',
+                    err
+                );
+
+
+                document.getElementById(
+                    'scheduleContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
+                    'countdownContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
+                    'scheduleName'
+                ).innerText =
+                    "Today's Schedule";
+
+
+                document.getElementById(
+                    'periodList'
+                ).innerHTML =
+                    '<tr><td colspan="3">Error loading schedule.</td></tr>';
+
+
+                document.getElementById(
+                    'countdownLabel'
+                ).innerText =
+                    'Unable to load schedule';
+
+
+                document.getElementById(
+                    'countdownTimer'
+                ).innerText =
+                    '--:--:--';
+
+
+                clearInterval(
+                    timerInterval
+                );
+
+            });
+
         }
 
 
-        // Helper function to convert "HH:MM" string to a Date object for today
+        // ---------------------------------------------------------
+        // PARSE TIME
+        // ---------------------------------------------------------
+
         function parseTime(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            const now = new Date();
-            now.setHours(hours, minutes, 0, 0);
+
+            const [
+                hours,
+                minutes
+            ] =
+                timeStr
+                    .split(':')
+                    .map(Number);
+
+
+            const now =
+                new Date();
+
+
+            now.setHours(
+                hours,
+                minutes,
+                0,
+                0
+            );
+
+
             return now;
+
         }
+
+
+        // ---------------------------------------------------------
+        // GET BELL TIME
+        // ---------------------------------------------------------
+
+        function getBellTime() {
+
+            /*
+             * Positive offset:
+             *
+             *   Real time  = 8:00:00
+             *   Offset      = +30
+             *   Bell time  = 8:00:30
+             *
+             * Negative offset:
+             *
+             *   Real time  = 8:00:00
+             *   Offset      = -30
+             *   Bell time  = 7:59:30
+             */
+
+            return new Date(
+                Date.now() +
+                currentOffsetSeconds * 1000
+            );
+
+        }
+
+
+        // ---------------------------------------------------------
+        // FORMAT TIME REMAINING
+        // ---------------------------------------------------------
 
         function formatTimeRemaining(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            
-            // Format HH:MM:SS
-            const h = hours > 0 ? String(hours).padStart(2, '0') + ':' : '';
-            const m = String(minutes).padStart(2, '0');
-            const s = String(seconds).padStart(2, '0');
+
+            const totalSeconds =
+                Math.max(
+                    0,
+                    Math.floor(
+                        ms / 1000
+                    )
+                );
+
+
+            const hours =
+                Math.floor(
+                    totalSeconds / 3600
+                );
+
+
+            const minutes =
+                Math.floor(
+                    (
+                        totalSeconds % 3600
+                    ) / 60
+                );
+
+
+            const seconds =
+                totalSeconds % 60;
+
+
+            const h =
+                hours > 0
+                    ? String(hours)
+                        .padStart(2, '0') +
+                      ':'
+                    : '';
+
+
+            const m =
+                String(minutes)
+                    .padStart(2, '0');
+
+
+            const s =
+                String(seconds)
+                    .padStart(2, '0');
+
+
             return `${h}${m}:${s}`;
+
         }
+
+
+        // ---------------------------------------------------------
+        // UPDATE COUNTDOWN
+        // ---------------------------------------------------------
 
         function updateCountdown() {
-            const now = new Date();
-            const labelEl = document.getElementById('countdownLabel');
-            const timerEl = document.getElementById('countdownTimer');
-            
-            let currentActiveIndex = -1;
-            let nextEventTime = null;
-            let statusText = "";
+
+            /*
+             * IMPORTANT:
+             *
+             * Use the adjusted bell time instead
+             * of raw real-world time.
+             */
+
+            const now =
+                getBellTime();
+
+
+            const labelEl =
+                document.getElementById(
+                    'countdownLabel'
+                );
+
+
+            const timerEl =
+                document.getElementById(
+                    'countdownTimer'
+                );
+
+
+            let currentActiveIndex =
+                -1;
+
+
+            let nextEventTime =
+                null;
+
+
+            let statusText =
+                "";
+
 
             // Clear previous highlighting
-            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('active-period'));
 
-            // Check before the school day starts
-            const firstStart = parseTime(currentPeriods[0].start_time);
-            if (now < firstStart) {
-                statusText = `Time until ${currentPeriods[0].name} starts`;
-                nextEventTime = firstStart;
-            } else {
-                // Iterate to find where we are right now
-                for (let i = 0; i < currentPeriods.length; i++) {
-                    const p = currentPeriods[i];
-                    const start = parseTime(p.start_time);
-                    // Use a fallback end time if it's the last period and undefined
-                    const end = p.end_time ? parseTime(p.end_time) : new Date(start.getTime() + 45*60000); 
+            document
+                .querySelectorAll('tr')
+                .forEach(
+                    tr =>
+                        tr.classList.remove(
+                            'active-period'
+                        )
+                );
 
-                    // We are inside this period
-                    if (now >= start && now < end) {
-                        currentActiveIndex = i;
-                        statusText = `Time remaining in ${p.name}`;
-                        nextEventTime = end;
-                        break;
-                    }
 
-                    // We are in a passing period (between this period's end and the next period's start)
-                    if (i + 1 < currentPeriods.length) {
-                        const nextStart = parseTime(currentPeriods[i+1].start_time);
-                        if (now >= end && now < nextStart) {
-                            statusText = `Passing period until ${currentPeriods[i+1].name}`;
-                            nextEventTime = nextStart;
-                            break;
-                        }
-                    }
+            // -----------------------------------------------------
+            // END OF SCHOOL
+            // -----------------------------------------------------
+
+            if (currentEndOfSchool) {
+
+                const endOfSchool =
+                    parseTime(
+                        currentEndOfSchool
+                    );
+
+
+                if (now >= endOfSchool) {
+
+                    timerEl.innerText =
+                        "";
+
+
+                    labelEl.innerText =
+                        "END OF SCHOOL";
+
+
+                    return;
+
                 }
+
             }
+
+
+            // -----------------------------------------------------
+            // BEFORE SCHOOL
+            // -----------------------------------------------------
+
+            const firstStart =
+                parseTime(
+                    currentPeriods[0].start_time
+                );
+
+
+            if (now < firstStart) {
+
+                statusText =
+                    `Time until ${currentPeriods[0].name} starts`;
+
+
+                nextEventTime =
+                    firstStart;
+
+            }
+
+            else {
+
+                // -------------------------------------------------
+                // FIND CURRENT PERIOD
+                // -------------------------------------------------
+
+                for (
+                    let i = 0;
+                    i < currentPeriods.length;
+                    i++
+                ) {
+
+                    const p =
+                        currentPeriods[i];
+
+
+                    const start =
+                        parseTime(
+                            p.start_time
+                        );
+
+
+                    /*
+                     * If this period has an explicit
+                     * end time, use it.
+                     *
+                     * If it is the last period and
+                     * there is an End of School time,
+                     * use that instead.
+                     *
+                     * Otherwise fall back to 45 minutes.
+                     */
+
+                    let end;
+
+
+                    if (p.end_time) {
+
+                        end =
+                            parseTime(
+                                p.end_time
+                            );
+
+                    }
+
+                    else if (
+                        i ===
+                            currentPeriods.length - 1 &&
+                        currentEndOfSchool
+                    ) {
+
+                        end =
+                            parseTime(
+                                currentEndOfSchool
+                            );
+
+                    }
+
+                    else {
+
+                        end =
+                            new Date(
+                                start.getTime() +
+                                45 * 60000
+                            );
+
+                    }
+
+
+                    // -------------------------------------------------
+                    // INSIDE PERIOD
+                    // -------------------------------------------------
+
+                    if (
+                        now >= start &&
+                        now < end
+                    ) {
+
+                        currentActiveIndex =
+                            i;
+
+
+                        statusText =
+                            `Time remaining in ${p.name}`;
+
+
+                        nextEventTime =
+                            end;
+
+
+                        break;
+
+                    }
+
+
+                    // -------------------------------------------------
+                    // PASSING PERIOD
+                    // -------------------------------------------------
+
+                    if (
+                        i + 1 <
+                        currentPeriods.length
+                    ) {
+
+                        const nextStart =
+                            parseTime(
+                                currentPeriods[
+                                    i + 1
+                                ].start_time
+                            );
+
+
+                        if (
+                            now >= end &&
+                            now < nextStart
+                        ) {
+
+                            statusText =
+                                `Passing period until ${currentPeriods[i + 1].name}`;
+
+
+                            nextEventTime =
+                                nextStart;
+
+
+                            break;
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            // -----------------------------------------------------
+            // DISPLAY COUNTDOWN
+            // -----------------------------------------------------
 
             if (nextEventTime) {
-                const diff = nextEventTime - now;
-                timerEl.innerText = formatTimeRemaining(diff);
-                labelEl.innerText = statusText;
-                
-                if (currentActiveIndex !== -1) {
-                    const row = document.getElementById(`row-${currentActiveIndex}`);
-                    if(row) row.classList.add('active-period');
+
+                const diff =
+                    nextEventTime - now;
+
+
+                timerEl.innerText =
+                    formatTimeRemaining(
+                        diff
+                    );
+
+
+                labelEl.innerText =
+                    statusText;
+
+
+                if (
+                    currentActiveIndex !== -1
+                ) {
+
+                    const row =
+                        document.getElementById(
+                            `row-${currentActiveIndex}`
+                        );
+
+
+                    if (row) {
+
+                        row.classList.add(
+                            'active-period'
+                        );
+
+                    }
+
                 }
-            } else {
-                // End of day
-                timerEl.innerText = "00:00";
-                labelEl.innerText = "School Day Over";
+
             }
+
+            else {
+
+                // No upcoming event
+
+                timerEl.innerText =
+                    "00:00";
+
+
+                labelEl.innerText =
+                    "END OF SCHOOL";
+
+            }
+
         }
+
     </script>
+
 </body>
+
 </html>
