@@ -141,6 +141,8 @@
 
         let refreshInterval = null;
 
+        let retryTimeout = null;
+
         let currentSchoolId = null;
 
         let lastScheduleFingerprint = null;
@@ -257,6 +259,21 @@
                 );
 
                 refreshInterval = null;
+
+            }
+
+        }
+
+
+        function stopRetryTimer() {
+
+            if (retryTimeout) {
+
+                clearTimeout(
+                    retryTimeout
+                );
+
+                retryTimeout = null;
 
             }
 
@@ -431,6 +448,7 @@
 
 
             startRefreshTimer();
+            stopRetryTimer();
 
 
             if (!options.silent) {
@@ -675,6 +693,12 @@
                 clearInterval(
                     timerInterval
                 );
+
+
+                // Retry after 30 seconds
+                retryTimeout = setTimeout(() => {
+                    loadSchedule(schoolId, { updateUrl: false, silent: true });
+                }, 30000);
 
             });
 
