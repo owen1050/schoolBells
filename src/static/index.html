@@ -889,11 +889,11 @@
                 if (now >= endOfSchool) {
 
                     timerEl.innerText =
-                        "";
+                        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 
                     labelEl.innerText =
-                        "END OF SCHOOL";
+                        "School Day Over";
 
 
                     return;
@@ -1107,11 +1107,11 @@
                 // No upcoming event
 
                 timerEl.innerText =
-                    "00:00";
+                    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 
                 labelEl.innerText =
-                    "END OF SCHOOL";
+                    "School Day Over";
 
             }
 
