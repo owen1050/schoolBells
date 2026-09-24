@@ -591,6 +591,12 @@
                     );
 
 
+                    // Retry after 30 seconds
+                    retryTimeout = setTimeout(() => {
+                        loadSchedule(schoolId, { updateUrl: false, silent: true });
+                    }, 30000);
+
+
                     return;
 
                 }
