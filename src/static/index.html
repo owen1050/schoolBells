@@ -220,6 +220,17 @@
         }
 
 
+        function changeSchool() {
+
+            document.getElementById(
+                'schoolSelect'
+            ).value = '';
+
+            loadSchedule('');
+
+        }
+
+
         // ---------------------------------------------------------
         // SCHEDULE FINGERPRINT
         // ---------------------------------------------------------
@@ -426,6 +437,12 @@
             if (!schoolId) {
 
                 document.getElementById(
+                    'schoolSelectorContainer'
+                ).style.display =
+                    'block';
+
+
+                document.getElementById(
                     'scheduleContainer'
                 ).style.display =
                     'none';
@@ -452,6 +469,12 @@
                 return;
 
             }
+
+
+            document.getElementById(
+                'schoolSelectorContainer'
+            ).style.display =
+                'none';
 
 
             startRefreshTimer();
