@@ -82,19 +82,23 @@
     </div>
 
 
-    <h1>Select Your School</h1>
+    <div id="schoolSelectorContainer">
+
+        <h1>Select Your School</h1>
 
 
-    <select
-        id="schoolSelect"
-        onchange="loadSchedule()"
-    >
+        <select
+            id="schoolSelect"
+            onchange="loadSchedule()"
+        >
 
-        <option value="">
-            -- Choose a School --
-        </option>
+            <option value="">
+                -- Choose a School --
+            </option>
 
-    </select>
+        </select>
+
+    </div>
 
 
     <div
@@ -102,7 +106,10 @@
         style="display:none;"
     >
 
-        <h2 id="scheduleName"></h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 id="scheduleName" style="margin: 0;"></h2>
+            <button onclick="changeSchool()" style="padding: 6px 12px; font-size: 14px; cursor: pointer;">Change School</button>
+        </div>
 
 
         <table>
