@@ -1454,57 +1454,43 @@
         }
     }
 
-    function applyThemeSettings(settings) {
-        if (settings.bgColor) {
-            document.body.style.backgroundColor = settings.bgColor;
-        }
-        if (settings.textColor) {
-            document.body.style.color = settings.textColor;
-            const h2s = document.querySelectorAll('h2, h3, label, p, strong, span');
-            h2s.forEach(el => el.style.color = settings.textColor);
-        }
-        if (settings.fontFamily) {
-            document.body.style.fontFamily = settings.fontFamily;
-        }
-    }
+    // ---------------------------------------------------------
+    // THEME / DEFAULT SCHOOL THEME CONFIG LOGIC
+    // ---------------------------------------------------------
 
-    function loadSavedThemeSettings() {
-        const saved = localStorage.getItem('schoolBellsTheme');
-        if (saved) {
-            try {
-                const settings = JSON.parse(saved);
-                applyThemeSettings(settings);
-            } catch (e) {}
+    function toggleSettingsMenu() {
+        const menu = document.getElementById('settingsMenu');
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+            loadSettingsIntoInputs();
         }
     }
 
     function loadSettingsIntoInputs() {
-        const saved = localStorage.getItem('schoolBellsTheme');
-        let settings = { bgColor: '#ffffff', textColor: '#333333', fontFamily: 'Arial, sans-serif' };
-        if (saved) {
-            try {
-                settings = Object.assign(settings, JSON.parse(saved));
-            } catch (e) {}
-        }
-        document.getElementById('bgColorInput').value = settings.bgColor;
-        document.getElementById('textColorInput').value = settings.textColor;
-        document.getElementById('fontSelect').value = settings.fontFamily;
+        fetch('/api/admin/school_theme')
+            .then(res => res.json())
+            .then(theme => {
+                document.getElementById('bgColorInput').value = theme.bg_color || '#ffffff';
+                document.getElementById('textColorInput').value = theme.text_color || '#333333';
+                document.getElementById('fontSelect').value = theme.font_family || 'Arial, sans-serif';
+            })
+            .catch(err => {
+                document.getElementById('bgColorInput').value = '#ffffff';
+                document.getElementById('textColorInput').value = '#333333';
+                document.getElementById('fontSelect').value = 'Arial, sans-serif';
+            });
     }
 
     function onSettingChanged() {
-        const settings = {
-            bgColor: document.getElementById('bgColorInput').value,
-            textColor: document.getElementById('textColorInput').value,
-            fontFamily: document.getElementById('fontSelect').value
-        };
-        localStorage.setItem('schoolBellsTheme', JSON.stringify(settings));
-        applyThemeSettings(settings);
+        // Inputs updated locally in modal
     }
 
     function resetThemeSettings() {
-        localStorage.removeItem('schoolBellsTheme');
-        loadSchoolDefaultTheme();
-        loadSettingsIntoInputs();
+        document.getElementById('bgColorInput').value = '#ffffff';
+        document.getElementById('textColorInput').value = '#333333';
+        document.getElementById('fontSelect').value = 'Arial, sans-serif';
         toggleSettingsMenu();
     }
 
@@ -1538,20 +1524,7 @@
     }
 
     function loadSchoolDefaultTheme() {
-        fetch('/api/admin/school_theme')
-            .then(res => res.json())
-            .then(theme => {
-                if (theme.bg_color || theme.text_color || theme.font_family) {
-                    const settings = {
-                        bgColor: theme.bg_color || '#ffffff',
-                        textColor: theme.text_color || '#333333',
-                        fontFamily: theme.font_family || 'Arial, sans-serif'
-                    };
-                    applyThemeSettings(settings);
-                    localStorage.setItem('schoolBellsTheme', JSON.stringify(settings));
-                }
-            })
-            .catch(err => console.error('Error loading school default theme:', err));
+        // Admin page remains static-themed
     }
 
     loadSavedThemeSettings();
