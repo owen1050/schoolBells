@@ -107,7 +107,9 @@
             position: fixed;
             top: 60px;
             right: 20px;
-            background: #fff;
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: Arial, sans-serif !important;
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 20px;
@@ -122,7 +124,7 @@
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 18px;
-            color: #333;
+            color: #333333 !important;
         }
 
         .setting-group {
@@ -133,7 +135,7 @@
             display: block;
             margin-bottom: 5px;
             font-size: 14px;
-            color: #555;
+            color: #555555 !important;
             font-weight: bold;
         }
 
@@ -143,6 +145,10 @@
             padding: 6px;
             font-size: 14px;
             box-sizing: border-box;
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            border: 1px solid #ccc !important;
+            font-family: Arial, sans-serif !important;
         }
 
         .setting-buttons {
@@ -156,18 +162,20 @@
             padding: 8px 12px;
             font-size: 14px;
             cursor: pointer;
-            border: none;
             border-radius: 4px;
+            font-family: Arial, sans-serif !important;
         }
 
         #saveSettingsBtn {
-            background-color: #007bff;
-            color: white;
+            background-color: #007bff !important;
+            color: white !important;
+            border: 1px solid #007bff !important;
         }
 
         #resetSettingsBtn {
-            background-color: #6c757d;
-            color: white;
+            background-color: #6c757d !important;
+            color: white !important;
+            border: 1px solid #6c757d !important;
         }
 
     </style>
@@ -729,6 +737,19 @@
 
                 currentEndOfSchool =
                     data.end_of_school || "";
+
+
+                // Apply school default theme if user has no local override
+                if (!localStorage.getItem('schoolBellsTheme')) {
+                    const defaultTheme = {
+                        bgColor: data.default_bg_color || '',
+                        textColor: data.default_text_color || '',
+                        fontFamily: data.default_font_family || ''
+                    };
+                    if (defaultTheme.bgColor || defaultTheme.textColor || defaultTheme.fontFamily) {
+                        applyThemeSettings(defaultTheme);
+                    }
+                }
 
 
                 // -------------------------------------------------
@@ -1337,23 +1358,19 @@
         }
 
         function applyThemeSettings(settings) {
-            if (settings.bgColor) {
-                document.body.style.backgroundColor = settings.bgColor;
-            }
-            if (settings.textColor) {
-                document.body.style.color = settings.textColor;
-                const timerEl = document.getElementById('countdownTimer');
-                const labelEl = document.getElementById('countdownLabel');
-                const h1El = document.querySelector('h1');
-                const h2El = document.getElementById('scheduleName');
-                if (timerEl) timerEl.style.color = settings.textColor;
-                if (labelEl) labelEl.style.color = settings.textColor;
-                if (h1El) h1El.style.color = settings.textColor;
-                if (h2El) h2El.style.color = settings.textColor;
-            }
-            if (settings.fontFamily) {
-                document.body.style.fontFamily = settings.fontFamily;
-            }
+            document.body.style.backgroundColor = settings.bgColor || '';
+            document.body.style.color = settings.textColor || '';
+            document.body.style.fontFamily = settings.fontFamily || '';
+
+            const timerEl = document.getElementById('countdownTimer');
+            const labelEl = document.getElementById('countdownLabel');
+            const h1El = document.querySelector('h1');
+            const h2El = document.getElementById('scheduleName');
+            
+            if (timerEl) timerEl.style.color = settings.textColor || '';
+            if (labelEl) labelEl.style.color = settings.textColor || '';
+            if (h1El) h1El.style.color = settings.textColor || '';
+            if (h2El) h2El.style.color = settings.textColor || '';
         }
 
         function loadSavedThemeSettings() {
@@ -1393,19 +1410,29 @@
 
         function resetThemeSettings() {
             localStorage.removeItem('schoolBellsTheme');
-            document.body.style.backgroundColor = '';
-            document.body.style.color = '';
-            document.body.style.fontFamily = '';
-            const timerEl = document.getElementById('countdownTimer');
-            const labelEl = document.getElementById('countdownLabel');
-            const h1El = document.querySelector('h1');
-            const h2El = document.getElementById('scheduleName');
-            if (timerEl) timerEl.style.color = '#333';
-            if (labelEl) labelEl.style.color = '#333';
-            if (h1El) h1El.style.color = '';
-            if (h2El) h2El.style.color = '';
-            loadSettingsIntoInputs();
-            toggleSettingsMenu();
+            if (currentSchoolId) {
+                fetch(`/api/schedule/today/${currentSchoolId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const defaultTheme = {
+                            bgColor: data.default_bg_color || '',
+                            textColor: data.default_text_color || '',
+                            fontFamily: data.default_font_family || ''
+                        };
+                        applyThemeSettings(defaultTheme);
+                        loadSettingsIntoInputs();
+                        toggleSettingsMenu();
+                    })
+                    .catch(err => {
+                        applyThemeSettings({ bgColor: '', textColor: '', fontFamily: '' });
+                        loadSettingsIntoInputs();
+                        toggleSettingsMenu();
+                    });
+            } else {
+                applyThemeSettings({ bgColor: '', textColor: '', fontFamily: '' });
+                loadSettingsIntoInputs();
+                toggleSettingsMenu();
+            }
         }
 
         // Auto-load theme on startup

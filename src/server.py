@@ -132,6 +132,30 @@ def manage_offset():
 
 
 # ---------------------------------------------------------
+# SCHOOL THEME
+# ---------------------------------------------------------
+
+@app.route('/api/admin/school_theme', methods=['GET', 'POST'])
+def manage_school_theme():
+    school_id = session.get('admin_school_id')
+
+    if not school_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    if request.method == 'GET':
+        return jsonify(db.get_school_theme(school_id))
+
+    data = request.json or {}
+    bg_color = data.get('bg_color', '')
+    text_color = data.get('text_color', '')
+    font_family = data.get('font_family', '')
+
+    db.update_school_theme(school_id, bg_color, text_color, font_family)
+
+    return jsonify({"success": True})
+
+
+# ---------------------------------------------------------
 # SET TODAY'S SCHEDULE
 # ---------------------------------------------------------
 
