@@ -635,6 +635,18 @@
                 currentPeriods.forEach(
                     (p, index) => {
 
+                        if (
+                            p.name &&
+                            p.name.toLowerCase().includes(
+                                'passing'
+                            )
+                        ) {
+
+                            return;
+
+                        }
+
+
                         const end =
                             p.end_time || "";
 
