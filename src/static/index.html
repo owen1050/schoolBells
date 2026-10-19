@@ -20,6 +20,27 @@
             padding: 10px;
             font-size: 16px;
             margin: 20px 0;
+            font-family: inherit;
+            color: inherit;
+            background: transparent;
+            border: 1px solid currentColor;
+            border-radius: 4px;
+        }
+
+        button {
+            font-family: inherit;
+            color: inherit;
+            background: transparent;
+            border: 1px solid currentColor;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: rgba(128, 128, 128, 0.15);
         }
 
         table {
@@ -61,12 +82,141 @@
             font-weight: bold;
         }
 
+        /* Settings Icon & Menu */
+        .settings-gear {
+            font-size: 16px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: background 0.2s;
+            vertical-align: middle;
+        }
+
+        .settings-gear:hover {
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        #settingsMenu {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            text-align: left;
+            width: 250px;
+        }
+
+        #settingsMenu h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .setting-group input[type="color"],
+        .setting-group select {
+            width: 100%;
+            padding: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .setting-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .setting-buttons button {
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #saveSettingsBtn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #resetSettingsBtn {
+            background-color: #6c757d;
+            color: white;
+        }
+
     </style>
 
 </head>
 
 
 <body>
+
+
+    <!-- Settings Menu -->
+    <div id="settingsMenu">
+        <h3>Theme Settings</h3>
+        
+        <div class="setting-group">
+            <label for="bgColorInput">Background Color</label>
+            <input type="color" id="bgColorInput" value="#ffffff" oninput="onSettingChanged()">
+        </div>
+
+        <div class="setting-group">
+            <label for="textColorInput">Text Color</label>
+            <input type="color" id="textColorInput" value="#333333" oninput="onSettingChanged()">
+        </div>
+
+        <div class="setting-group">
+            <label for="fontSelect">Font Family</label>
+            <select id="fontSelect" onchange="onSettingChanged()">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+                <option value="'Inter', sans-serif">Inter</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="Garamond, serif">Garamond</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+                <option value="'Fira Code', monospace">Fira Code</option>
+                <option value="Impact, Charcoal, sans-serif">Impact</option>
+                <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+            </select>
+        </div>
+
+        <div class="setting-buttons">
+            <button id="resetSettingsBtn" onclick="resetThemeSettings()">Reset</button>
+            <button id="saveSettingsBtn" onclick="toggleSettingsMenu()">Close</button>
+        </div>
+    </div>
 
 
     <div id="countdownContainer">
@@ -84,7 +234,10 @@
 
     <div id="schoolSelectorContainer">
 
-        <h1>Select Your School</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1 style="margin: 0;">Select Your School</h1>
+            <div class="settings-gear" onclick="toggleSettingsMenu()" title="Settings">⚙️</div>
+        </div>
 
 
         <select
@@ -108,7 +261,10 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h2 id="scheduleName" style="margin: 0;"></h2>
-            <button onclick="changeSchool()" style="padding: 6px 12px; font-size: 14px; cursor: pointer;">Change School</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="settings-gear" onclick="toggleSettingsMenu()" title="Settings">⚙️</div>
+                <button onclick="changeSchool()" style="padding: 6px 12px; font-size: 14px; cursor: pointer;">Change School</button>
+            </div>
         </div>
 
 
@@ -635,6 +791,18 @@
                 currentPeriods.forEach(
                     (p, index) => {
 
+                        if (
+                            p.name &&
+                            p.name.toLowerCase().includes(
+                                'passing'
+                            )
+                        ) {
+
+                            return;
+
+                        }
+
+
                         const end =
                             p.end_time || "";
 
@@ -1152,6 +1320,96 @@
             }
 
         }
+
+
+        // ---------------------------------------------------------
+        // THEME / SETTINGS LOGIC
+        // ---------------------------------------------------------
+
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settingsMenu');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+                loadSettingsIntoInputs();
+            }
+        }
+
+        function applyThemeSettings(settings) {
+            if (settings.bgColor) {
+                document.body.style.backgroundColor = settings.bgColor;
+            }
+            if (settings.textColor) {
+                document.body.style.color = settings.textColor;
+                const timerEl = document.getElementById('countdownTimer');
+                const labelEl = document.getElementById('countdownLabel');
+                const h1El = document.querySelector('h1');
+                const h2El = document.getElementById('scheduleName');
+                if (timerEl) timerEl.style.color = settings.textColor;
+                if (labelEl) labelEl.style.color = settings.textColor;
+                if (h1El) h1El.style.color = settings.textColor;
+                if (h2El) h2El.style.color = settings.textColor;
+            }
+            if (settings.fontFamily) {
+                document.body.style.fontFamily = settings.fontFamily;
+            }
+        }
+
+        function loadSavedThemeSettings() {
+            const saved = localStorage.getItem('schoolBellsTheme');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    applyThemeSettings(settings);
+                } catch (e) {
+                    console.error('Error loading theme settings:', e);
+                }
+            }
+        }
+
+        function loadSettingsIntoInputs() {
+            const saved = localStorage.getItem('schoolBellsTheme');
+            let settings = { bgColor: '#ffffff', textColor: '#333333', fontFamily: 'Arial, sans-serif' };
+            if (saved) {
+                try {
+                    settings = Object.assign(settings, JSON.parse(saved));
+                } catch (e) {}
+            }
+            document.getElementById('bgColorInput').value = settings.bgColor;
+            document.getElementById('textColorInput').value = settings.textColor;
+            document.getElementById('fontSelect').value = settings.fontFamily;
+        }
+
+        function onSettingChanged() {
+            const settings = {
+                bgColor: document.getElementById('bgColorInput').value,
+                textColor: document.getElementById('textColorInput').value,
+                fontFamily: document.getElementById('fontSelect').value
+            };
+            localStorage.setItem('schoolBellsTheme', JSON.stringify(settings));
+            applyThemeSettings(settings);
+        }
+
+        function resetThemeSettings() {
+            localStorage.removeItem('schoolBellsTheme');
+            document.body.style.backgroundColor = '';
+            document.body.style.color = '';
+            document.body.style.fontFamily = '';
+            const timerEl = document.getElementById('countdownTimer');
+            const labelEl = document.getElementById('countdownLabel');
+            const h1El = document.querySelector('h1');
+            const h2El = document.getElementById('scheduleName');
+            if (timerEl) timerEl.style.color = '#333';
+            if (labelEl) labelEl.style.color = '#333';
+            if (h1El) h1El.style.color = '';
+            if (h2El) h2El.style.color = '';
+            loadSettingsIntoInputs();
+            toggleSettingsMenu();
+        }
+
+        // Auto-load theme on startup
+        loadSavedThemeSettings();
 
     </script>
 
