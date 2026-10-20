@@ -23,7 +23,7 @@
             font-family: inherit;
             color: inherit;
             background: transparent;
-            border: 1px solid currentColor;
+            border: 1px solid var(--theme-border-color, currentColor);
             border-radius: 4px;
         }
 
@@ -31,7 +31,7 @@
             font-family: inherit;
             color: inherit;
             background: transparent;
-            border: 1px solid currentColor;
+            border: 1px solid var(--theme-border-color, currentColor);
             border-radius: 4px;
             padding: 6px 12px;
             font-size: 14px;
@@ -51,7 +51,7 @@
 
         th,
         td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--theme-border-color, #ddd);
             padding: 12px;
             text-align: left;
         }
@@ -201,6 +201,11 @@
         </div>
 
         <div class="setting-group">
+            <label for="borderColorInput">Table & Button Outline Color</label>
+            <input type="color" id="borderColorInput" value="#dddddd" oninput="onSettingChanged()">
+        </div>
+
+        <div class="setting-group">
             <label for="fontSelect">Font Family</label>
             <select id="fontSelect" onchange="onSettingChanged()">
                 <option value="Arial, sans-serif">Arial</option>
@@ -242,10 +247,7 @@
 
     <div id="schoolSelectorContainer">
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h1 style="margin: 0;">Select Your School</h1>
-            <div class="settings-gear" onclick="toggleSettingsMenu()" title="Settings">⚙️</div>
-        </div>
+        <h1 style="margin: 0 0 10px 0;">Select Your School</h1>
 
 
         <select
@@ -600,6 +602,9 @@
 
             if (!schoolId) {
 
+                const settingsMenu = document.getElementById('settingsMenu');
+                if (settingsMenu) settingsMenu.style.display = 'none';
+
                 document.getElementById(
                     'schoolSelectorContainer'
                 ).style.display =
@@ -744,9 +749,10 @@
                     const defaultTheme = {
                         bgColor: data.default_bg_color || '',
                         textColor: data.default_text_color || '',
+                        borderColor: data.default_border_color || '',
                         fontFamily: data.default_font_family || ''
                     };
-                    if (defaultTheme.bgColor || defaultTheme.textColor || defaultTheme.fontFamily) {
+                    if (defaultTheme.bgColor || defaultTheme.textColor || defaultTheme.borderColor || defaultTheme.fontFamily) {
                         applyThemeSettings(defaultTheme);
                     }
                 }
@@ -1362,6 +1368,12 @@
             document.body.style.color = settings.textColor || '';
             document.body.style.fontFamily = settings.fontFamily || '';
 
+            if (settings.borderColor) {
+                document.documentElement.style.setProperty('--theme-border-color', settings.borderColor);
+            } else {
+                document.documentElement.style.removeProperty('--theme-border-color');
+            }
+
             const timerEl = document.getElementById('countdownTimer');
             const labelEl = document.getElementById('countdownLabel');
             const h1El = document.querySelector('h1');
@@ -1387,21 +1399,23 @@
 
         function loadSettingsIntoInputs() {
             const saved = localStorage.getItem('schoolBellsTheme');
-            let settings = { bgColor: '#ffffff', textColor: '#333333', fontFamily: 'Arial, sans-serif' };
+            let settings = { bgColor: '#ffffff', textColor: '#333333', borderColor: '#dddddd', fontFamily: 'Arial, sans-serif' };
             if (saved) {
                 try {
                     settings = Object.assign(settings, JSON.parse(saved));
                 } catch (e) {}
             }
-            document.getElementById('bgColorInput').value = settings.bgColor;
-            document.getElementById('textColorInput').value = settings.textColor;
-            document.getElementById('fontSelect').value = settings.fontFamily;
+            document.getElementById('bgColorInput').value = settings.bgColor || '#ffffff';
+            document.getElementById('textColorInput').value = settings.textColor || '#333333';
+            document.getElementById('borderColorInput').value = settings.borderColor || '#dddddd';
+            document.getElementById('fontSelect').value = settings.fontFamily || 'Arial, sans-serif';
         }
 
         function onSettingChanged() {
             const settings = {
                 bgColor: document.getElementById('bgColorInput').value,
                 textColor: document.getElementById('textColorInput').value,
+                borderColor: document.getElementById('borderColorInput').value,
                 fontFamily: document.getElementById('fontSelect').value
             };
             localStorage.setItem('schoolBellsTheme', JSON.stringify(settings));
@@ -1417,6 +1431,7 @@
                         const defaultTheme = {
                             bgColor: data.default_bg_color || '',
                             textColor: data.default_text_color || '',
+                            borderColor: data.default_border_color || '',
                             fontFamily: data.default_font_family || ''
                         };
                         applyThemeSettings(defaultTheme);
@@ -1424,12 +1439,12 @@
                         toggleSettingsMenu();
                     })
                     .catch(err => {
-                        applyThemeSettings({ bgColor: '', textColor: '', fontFamily: '' });
+                        applyThemeSettings({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
                         loadSettingsIntoInputs();
                         toggleSettingsMenu();
                     });
             } else {
-                applyThemeSettings({ bgColor: '', textColor: '', fontFamily: '' });
+                applyThemeSettings({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
                 loadSettingsIntoInputs();
                 toggleSettingsMenu();
             }

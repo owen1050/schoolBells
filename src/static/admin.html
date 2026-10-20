@@ -203,6 +203,11 @@
         </div>
 
         <div class="setting-group">
+            <label for="borderColorInput">Table & Button Outline Color</label>
+            <input type="color" id="borderColorInput" value="#dddddd" oninput="onSettingChanged()">
+        </div>
+
+        <div class="setting-group">
             <label for="fontSelect">Font Family</label>
             <select id="fontSelect" onchange="onSettingChanged()">
                 <option value="Arial, sans-serif">Arial</option>
@@ -1441,20 +1446,6 @@
 
 
     // ---------------------------------------------------------
-    // THEME / SETTINGS LOGIC
-    // ---------------------------------------------------------
-
-    function toggleSettingsMenu() {
-        const menu = document.getElementById('settingsMenu');
-        if (menu.style.display === 'block') {
-            menu.style.display = 'none';
-        } else {
-            menu.style.display = 'block';
-            loadSettingsIntoInputs();
-        }
-    }
-
-    // ---------------------------------------------------------
     // THEME / DEFAULT SCHOOL THEME CONFIG LOGIC
     // ---------------------------------------------------------
 
@@ -1474,11 +1465,13 @@
             .then(theme => {
                 document.getElementById('bgColorInput').value = theme.bg_color || '#ffffff';
                 document.getElementById('textColorInput').value = theme.text_color || '#333333';
+                document.getElementById('borderColorInput').value = theme.border_color || '#dddddd';
                 document.getElementById('fontSelect').value = theme.font_family || 'Arial, sans-serif';
             })
             .catch(err => {
                 document.getElementById('bgColorInput').value = '#ffffff';
                 document.getElementById('textColorInput').value = '#333333';
+                document.getElementById('borderColorInput').value = '#dddddd';
                 document.getElementById('fontSelect').value = 'Arial, sans-serif';
             });
     }
@@ -1490,6 +1483,7 @@
     function resetThemeSettings() {
         document.getElementById('bgColorInput').value = '#ffffff';
         document.getElementById('textColorInput').value = '#333333';
+        document.getElementById('borderColorInput').value = '#dddddd';
         document.getElementById('fontSelect').value = 'Arial, sans-serif';
         toggleSettingsMenu();
     }
@@ -1498,6 +1492,7 @@
         const settings = {
             bg_color: document.getElementById('bgColorInput').value,
             text_color: document.getElementById('textColorInput').value,
+            border_color: document.getElementById('borderColorInput').value,
             font_family: document.getElementById('fontSelect').value
         };
 

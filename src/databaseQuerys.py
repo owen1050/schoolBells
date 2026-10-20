@@ -104,35 +104,42 @@ def init_db():
                 ADD COLUMN default_font_family TEXT DEFAULT ''
             ''')
 
+        if 'default_border_color' not in school_columns:
+            c.execute('''
+                ALTER TABLE schools
+                ADD COLUMN default_border_color TEXT DEFAULT ''
+            ''')
+
         conn.commit()
 
 
 def get_school_theme(school_id):
     with get_connection() as conn:
         row = conn.execute(
-            'SELECT default_bg_color, default_text_color, default_font_family FROM schools WHERE id = ?',
+            'SELECT default_bg_color, default_text_color, default_font_family, default_border_color FROM schools WHERE id = ?',
             (school_id,)
         ).fetchone()
 
         if not row:
-            return {"bg_color": "", "text_color": "", "font_family": ""}
+            return {"bg_color": "", "text_color": "", "font_family": "", "border_color": ""}
 
         return {
             "bg_color": row['default_bg_color'] or "",
             "text_color": row['default_text_color'] or "",
-            "font_family": row['default_font_family'] or ""
+            "font_family": row['default_font_family'] or "",
+            "border_color": row['default_border_color'] or ""
         }
 
 
-def update_school_theme(school_id, bg_color, text_color, font_family):
+def update_school_theme(school_id, bg_color, text_color, font_family, border_color=''):
     with get_connection() as conn:
         conn.execute(
             '''
             UPDATE schools
-            SET default_bg_color = ?, default_text_color = ?, default_font_family = ?
+            SET default_bg_color = ?, default_text_color = ?, default_font_family = ?, default_border_color = ?
             WHERE id = ?
             ''',
-            (bg_color, text_color, font_family, school_id)
+            (bg_color, text_color, font_family, border_color, school_id)
         )
         conn.commit()
 
@@ -245,6 +252,7 @@ def get_todays_schedule(school_id):
             "default_bg_color": school_theme["bg_color"],
             "default_text_color": school_theme["text_color"],
             "default_font_family": school_theme["font_family"],
+            "default_border_color": school_theme["border_color"],
             "periods": [dict(p) for p in periods]
         }
 

@@ -149,8 +149,9 @@ def manage_school_theme():
     bg_color = data.get('bg_color', '')
     text_color = data.get('text_color', '')
     font_family = data.get('font_family', '')
+    border_color = data.get('border_color', '')
 
-    db.update_school_theme(school_id, bg_color, text_color, font_family)
+    db.update_school_theme(school_id, bg_color, text_color, font_family, border_color)
 
     return jsonify({"success": True})
 
