@@ -43,6 +43,10 @@
             background: rgba(128, 128, 128, 0.15);
         }
 
+        #changeSchoolBtn {
+            border: 1px solid currentColor !important;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -57,7 +61,7 @@
         }
 
         th {
-            background-color: #f4f4f4;
+            background-color: var(--theme-border-color, #f4f4f4);
         }
 
         #countdownContainer {
@@ -273,7 +277,7 @@
             <h2 id="scheduleName" style="margin: 0;"></h2>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div class="settings-gear" onclick="toggleSettingsMenu()" title="Settings">⚙️</div>
-                <button onclick="changeSchool()" style="padding: 6px 12px; font-size: 14px; cursor: pointer;">Change School</button>
+                <button id="changeSchoolBtn" onclick="changeSchool()" style="padding: 6px 12px; font-size: 14px; cursor: pointer;">Change School</button>
             </div>
         </div>
 
