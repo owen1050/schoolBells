@@ -1401,6 +1401,13 @@
             }
         }
 
+        function toHexColor(val, fallback) {
+            if (val && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+                return val;
+            }
+            return fallback;
+        }
+
         function loadSettingsIntoInputs() {
             const saved = localStorage.getItem('schoolBellsTheme');
             let settings = { bgColor: '#ffffff', textColor: '#333333', borderColor: '#dddddd', fontFamily: 'Arial, sans-serif' };
@@ -1409,9 +1416,9 @@
                     settings = Object.assign(settings, JSON.parse(saved));
                 } catch (e) {}
             }
-            document.getElementById('bgColorInput').value = settings.bgColor || '#ffffff';
-            document.getElementById('textColorInput').value = settings.textColor || '#333333';
-            document.getElementById('borderColorInput').value = settings.borderColor || '#dddddd';
+            document.getElementById('bgColorInput').value = toHexColor(settings.bgColor, '#ffffff');
+            document.getElementById('textColorInput').value = toHexColor(settings.textColor, '#333333');
+            document.getElementById('borderColorInput').value = toHexColor(settings.borderColor, '#dddddd');
             document.getElementById('fontSelect').value = settings.fontFamily || 'Arial, sans-serif';
         }
 

@@ -1449,6 +1449,13 @@
     // THEME / DEFAULT SCHOOL THEME CONFIG LOGIC
     // ---------------------------------------------------------
 
+    function toHexColor(val, fallback) {
+        if (val && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+            return val;
+        }
+        return fallback;
+    }
+
     function toggleSettingsMenu() {
         const menu = document.getElementById('settingsMenu');
         if (menu.style.display === 'block') {
@@ -1463,9 +1470,9 @@
         fetch('/api/admin/school_theme')
             .then(res => res.json())
             .then(theme => {
-                document.getElementById('bgColorInput').value = theme.bg_color || '#ffffff';
-                document.getElementById('textColorInput').value = theme.text_color || '#333333';
-                document.getElementById('borderColorInput').value = theme.border_color || '#dddddd';
+                document.getElementById('bgColorInput').value = toHexColor(theme.bg_color, '#ffffff');
+                document.getElementById('textColorInput').value = toHexColor(theme.text_color, '#333333');
+                document.getElementById('borderColorInput').value = toHexColor(theme.border_color, '#dddddd');
                 document.getElementById('fontSelect').value = theme.font_family || 'Arial, sans-serif';
             })
             .catch(err => {
@@ -1522,7 +1529,7 @@
         // Admin page remains static-themed
     }
 
-    loadSavedThemeSettings();
+    loadSchoolDefaultTheme();
 
 </script>
 
