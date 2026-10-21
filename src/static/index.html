@@ -328,6 +328,8 @@
 
         let currentEndOfSchool = "";
 
+        let currentSchoolDefaultTheme = null;
+
 
         // ---------------------------------------------------------
         // URL HELPERS
@@ -749,15 +751,16 @@
 
 
                 // Apply school default theme if user has no local override
+                currentSchoolDefaultTheme = {
+                    bgColor: data.default_bg_color || '',
+                    textColor: data.default_text_color || '',
+                    borderColor: data.default_border_color || '',
+                    fontFamily: data.default_font_family || ''
+                };
+
                 if (!localStorage.getItem('schoolBellsTheme')) {
-                    const defaultTheme = {
-                        bgColor: data.default_bg_color || '',
-                        textColor: data.default_text_color || '',
-                        borderColor: data.default_border_color || '',
-                        fontFamily: data.default_font_family || ''
-                    };
-                    if (defaultTheme.bgColor || defaultTheme.textColor || defaultTheme.borderColor || defaultTheme.fontFamily) {
-                        applyThemeSettings(defaultTheme);
+                    if (currentSchoolDefaultTheme.bgColor || currentSchoolDefaultTheme.textColor || currentSchoolDefaultTheme.borderColor || currentSchoolDefaultTheme.fontFamily) {
+                        applyThemeSettings(currentSchoolDefaultTheme);
                     }
                 }
 
@@ -1408,13 +1411,17 @@
             return fallback;
         }
 
-        function loadSettingsIntoInputs() {
+        function loadSettingsIntoInputs(themeOverride) {
             const saved = localStorage.getItem('schoolBellsTheme');
             let settings = { bgColor: '#ffffff', textColor: '#333333', borderColor: '#dddddd', fontFamily: 'Arial, sans-serif' };
-            if (saved) {
+            if (themeOverride) {
+                settings = Object.assign(settings, themeOverride);
+            } else if (saved) {
                 try {
                     settings = Object.assign(settings, JSON.parse(saved));
                 } catch (e) {}
+            } else if (currentSchoolDefaultTheme) {
+                settings = Object.assign(settings, currentSchoolDefaultTheme);
             }
             document.getElementById('bgColorInput').value = toHexColor(settings.bgColor, '#ffffff');
             document.getElementById('textColorInput').value = toHexColor(settings.textColor, '#333333');
@@ -1439,24 +1446,26 @@
                 fetch(`/api/schedule/today/${currentSchoolId}`)
                     .then(res => res.json())
                     .then(data => {
-                        const defaultTheme = {
+                        currentSchoolDefaultTheme = {
                             bgColor: data.default_bg_color || '',
                             textColor: data.default_text_color || '',
                             borderColor: data.default_border_color || '',
                             fontFamily: data.default_font_family || ''
                         };
-                        applyThemeSettings(defaultTheme);
-                        loadSettingsIntoInputs();
+                        applyThemeSettings(currentSchoolDefaultTheme);
+                        loadSettingsIntoInputs(currentSchoolDefaultTheme);
                         toggleSettingsMenu();
                     })
                     .catch(err => {
+                        currentSchoolDefaultTheme = null;
                         applyThemeSettings({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
-                        loadSettingsIntoInputs();
+                        loadSettingsIntoInputs({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
                         toggleSettingsMenu();
                     });
             } else {
+                currentSchoolDefaultTheme = null;
                 applyThemeSettings({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
-                loadSettingsIntoInputs();
+                loadSettingsIntoInputs({ bgColor: '', textColor: '', borderColor: '', fontFamily: '' });
                 toggleSettingsMenu();
             }
         }

@@ -1510,7 +1510,12 @@
             },
             body: JSON.stringify(settings)
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 alert('Default theme saved for this school!');
@@ -1521,7 +1526,7 @@
         })
         .catch(err => {
             console.error('Error saving default theme:', err);
-            alert('Error saving default theme.');
+            alert('Error saving default theme: ' + err.message);
         });
     }
 

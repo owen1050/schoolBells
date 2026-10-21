@@ -117,7 +117,7 @@ def get_school_theme(school_id):
     with get_connection() as conn:
         row = conn.execute(
             'SELECT default_bg_color, default_text_color, default_font_family, default_border_color FROM schools WHERE id = ?',
-            (school_id,)
+            (int(school_id),)
         ).fetchone()
 
         if not row:
@@ -139,7 +139,7 @@ def update_school_theme(school_id, bg_color, text_color, font_family, border_col
             SET default_bg_color = ?, default_text_color = ?, default_font_family = ?, default_border_color = ?
             WHERE id = ?
             ''',
-            (bg_color, text_color, font_family, border_color, school_id)
+            (bg_color, text_color, font_family, border_color, int(school_id))
         )
         conn.commit()
 
