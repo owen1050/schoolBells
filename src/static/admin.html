@@ -1470,16 +1470,15 @@
         fetch('/api/admin/school_theme')
             .then(res => res.json())
             .then(theme => {
+                const textColor = toHexColor(theme.text_color, '#333333');
+                const borderColor = toHexColor(theme.border_color, textColor);
                 document.getElementById('bgColorInput').value = toHexColor(theme.bg_color, '#ffffff');
-                document.getElementById('textColorInput').value = toHexColor(theme.text_color, '#333333');
-                document.getElementById('borderColorInput').value = toHexColor(theme.border_color, '#dddddd');
+                document.getElementById('textColorInput').value = textColor;
+                document.getElementById('borderColorInput').value = borderColor;
                 document.getElementById('fontSelect').value = theme.font_family || 'Arial, sans-serif';
             })
             .catch(err => {
-                document.getElementById('bgColorInput').value = '#ffffff';
-                document.getElementById('textColorInput').value = '#333333';
-                document.getElementById('borderColorInput').value = '#dddddd';
-                document.getElementById('fontSelect').value = 'Arial, sans-serif';
+                console.error('Error loading school theme:', err);
             });
     }
 
@@ -1488,11 +1487,7 @@
     }
 
     function resetThemeSettings() {
-        document.getElementById('bgColorInput').value = '#ffffff';
-        document.getElementById('textColorInput').value = '#333333';
-        document.getElementById('borderColorInput').value = '#dddddd';
-        document.getElementById('fontSelect').value = 'Arial, sans-serif';
-        toggleSettingsMenu();
+        loadSettingsIntoInputs();
     }
 
     function saveSchoolDefaultTheme() {

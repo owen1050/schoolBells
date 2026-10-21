@@ -1413,7 +1413,7 @@
 
         function loadSettingsIntoInputs(themeOverride) {
             const saved = localStorage.getItem('schoolBellsTheme');
-            let settings = { bgColor: '#ffffff', textColor: '#333333', borderColor: '#dddddd', fontFamily: 'Arial, sans-serif' };
+            let settings = { bgColor: '#ffffff', textColor: '#333333', borderColor: '', fontFamily: 'Arial, sans-serif' };
             if (themeOverride) {
                 settings = Object.assign(settings, themeOverride);
             } else if (saved) {
@@ -1423,9 +1423,10 @@
             } else if (currentSchoolDefaultTheme) {
                 settings = Object.assign(settings, currentSchoolDefaultTheme);
             }
+            const textColor = toHexColor(settings.textColor, '#333333');
             document.getElementById('bgColorInput').value = toHexColor(settings.bgColor, '#ffffff');
-            document.getElementById('textColorInput').value = toHexColor(settings.textColor, '#333333');
-            document.getElementById('borderColorInput').value = toHexColor(settings.borderColor, '#dddddd');
+            document.getElementById('textColorInput').value = textColor;
+            document.getElementById('borderColorInput').value = toHexColor(settings.borderColor, textColor);
             document.getElementById('fontSelect').value = settings.fontFamily || 'Arial, sans-serif';
         }
 
